@@ -113,7 +113,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 #hud>*{pointer-events:auto;}
 #hud-portrait{position:absolute;top:10px;left:10px;display:flex;gap:8px;align-items:flex-start;}
 #portrait-frame{width:74px;height:74px;background:var(--tex-wood);border:5px solid transparent;
-  border-image:var(--tex-framegold) 5 fill repeat;box-shadow:0 4px 0 rgba(0,0,0,.45);
+  border-image:var(--tex-framegold) 6 fill repeat;box-shadow:0 4px 0 rgba(0,0,0,.45);
   display:flex;align-items:center;justify-content:center;}
 #portrait-canvas{width:60px;height:60px;}
 #hud-bars{display:flex;flex-direction:column;gap:4px;padding-top:2px;}
@@ -121,7 +121,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 .bar .fill{position:absolute;inset:0;transform-origin:left;}
 .bar.hp .fill{background:linear-gradient(#ff7a60,var(--hp) 40%,var(--hp-d));}
 .bar.mp .fill{background:linear-gradient(#7ab0ff,var(--mp) 40%,var(--mp-d));}
-.bar.xp{height:10px;width:284px;}
+.bar.xp{height:10px;width:210px;}
 .bar.xp .fill{background:linear-gradient(#ffe9a0,var(--xp) 50%,#9c6b1a);}
 .bar .txt{position:absolute;inset:0;text-align:center;font-size:15px;line-height:13px;
   color:#fff;text-shadow:1px 1px 0 #000;font-family:'VT323';}
@@ -131,14 +131,14 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 .buff-ico{width:26px;height:26px;background:#241206;border:2px solid var(--gold-d);display:flex;align-items:center;justify-content:center;font-size:16px;}
 
 #minimap-wrap{position:absolute;top:10px;right:10px;width:172px;background:var(--tex-wood);
-  border:5px solid transparent;border-image:var(--tex-framegold) 5 fill repeat;box-shadow:0 4px 0 rgba(0,0,0,.45);padding:4px;}
+  border:5px solid transparent;border-image:var(--tex-framegold) 6 fill repeat;box-shadow:0 4px 0 rgba(0,0,0,.45);padding:4px;}
 #minimap{width:160px;height:160px;display:block;background:#000;}
 #minimap-label{font-family:'Press Start 2P';font-size:8px;color:var(--gold-l);text-align:center;
   padding:4px 2px 2px;text-shadow:1px 1px 0 #000;white-space:nowrap;overflow:hidden;}
 #clock-label{font-family:'VT323';font-size:16px;color:#ffe9c0;text-align:center;text-shadow:1px 1px 0 #000;}
 
-#quest-tracker{position:absolute;top:196px;right:10px;width:230px;max-height:40vh;overflow:hidden;
-  background:var(--tex-parch);border:5px solid transparent;border-image:var(--tex-frame) 5 fill repeat;
+#quest-tracker{position:absolute;top:196px;right:10px;width:230px;max-height:40vh;overflow:hidden;overflow-wrap:break-word;
+  background:var(--tex-parch);border:5px solid transparent;border-image:var(--tex-frame) 6 fill repeat;
   box-shadow:0 4px 0 rgba(0,0,0,.4);padding:8px 10px;font-size:17px;line-height:1.1;}
 #quest-tracker h4{font-family:'Press Start 2P';font-size:9px;color:#7c3a08;margin-bottom:6px;}
 #quest-tracker .qt-item{margin-bottom:7px;}
@@ -149,7 +149,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 /* hotbar */
 #hotbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:5px;
   padding:7px;background:var(--tex-wood);border:5px solid transparent;
-  border-image:var(--tex-framegold) 5 fill repeat;box-shadow:0 5px 0 rgba(0,0,0,.5);}
+  border-image:var(--tex-framegold) 6 fill repeat;box-shadow:0 5px 0 rgba(0,0,0,.5);}
 .slot{width:46px;height:46px;background:var(--tex-slot,#241206);border:3px solid #120800;
   box-shadow:inset 2px 2px 0 rgba(0,0,0,.5);position:relative;cursor:pointer;}
 .slot:hover{border-color:var(--gold);}
@@ -171,7 +171,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 #chat-input{display:none;font-family:'VT323';font-size:19px;padding:3px 8px;background:rgba(30,16,6,.92);
   border:3px solid var(--gold-d);color:#ffe;outline:none;}
 #target-frame{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;
-  background:var(--tex-wood);border:4px solid transparent;border-image:var(--tex-framegold) 4 fill repeat;
+  background:var(--tex-wood);border:4px solid transparent;border-image:var(--tex-framegold) 6 fill repeat;
   padding:5px 10px;min-width:260px;box-shadow:0 4px 0 rgba(0,0,0,.4);}
 #target-frame .t-name{font-family:'Press Start 2P';font-size:10px;color:#ffd0c0;text-shadow:1px 1px 0 #000;margin-bottom:4px;text-align:center;}
 #boss-bar{width:100%;height:14px;background:#241206;border:2px solid #000;position:relative;}

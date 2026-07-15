@@ -9,6 +9,7 @@
   const TS = 16;            // tile size in art px
   let SCALE = 3;            // screen scale
   const D = () => window.DATA, W = () => window.WORLD;
+
   // ---------------- state ----------------
   let canvas, ctx, running = false;
   let map = null;
@@ -24,6 +25,7 @@
   let saveTimer = 0, frameT = 0;
   let bossActive = null, warTimer = 0;
   let uid = 1;
+
   // ============================================================
   // player creation / stats
   // ============================================================
@@ -73,6 +75,7 @@
     P.hotbar = P.hotbar.map(h => { if (!h) return null; const k = h.t + h.id; if (seen.has(k)) return null; seen.add(k); return h; });
   }
   GAME.autoHotbar = autoHotbar;
+
   function recalc() {
     const b = P.base; let atk = 0, matk = 0, def = 0, hp = 0, mp = 0, agi = 0;
     for (const slot in P.equip) {
@@ -97,6 +100,7 @@
     P.base[stat]++; P.statPoints--; recalc();
     AUDIO.sfx('click'); UI.refreshAll();
   };
+
   function gainXp(n) {
     if (P.faction === null || P.faction === 'none') n = Math.floor(n * 1.1);
     P.xp += n;
@@ -124,6 +128,7 @@
     UI.refreshHud();
   }
   GAME.gainXp = gainXp;
+
   // ============================================================
   // inventory
   // ============================================================
@@ -240,6 +245,7 @@
     UI.toast('Crafted: ' + D().ITEMS[recipe.out].name + (recipe.n > 1 ? ' x' + recipe.n : ''), '#a8e89a');
     questProgress('gather', recipe.out, recipe.n);
   };
+
   // ============================================================
   // quests
   // ============================================================
@@ -293,7 +299,7 @@
     }
     // story
     const st = D().STORY[P.story];
-    if (st && st.type === type && (st.mob === key || st.npc === key)) {
+    if (st && (st.type === type || (st.type === 'boss' && type === 'kill')) && (st.mob === key || st.npc === key)) {
       P.storyProg = (P.storyProg || 0) + n;
       if (P.storyProg >= (st.n || 1)) advanceStory();
       changed = true;
@@ -323,6 +329,7 @@
     const st = D().STORY[P.story];
     if (st && st.type === 'faction') advanceStory();
   };
+
   // escort
   function startEscort(j) {
     const tpl = D().JOBS[j.idx];
@@ -335,12 +342,26 @@
     escort.sheet = PXA.makeHero(escort.look);
     UI.toast('Escort ' + escort.name + ' — keep them alive!', '#8fd4ff');
   }
+
   // ============================================================
   // map / entities
   // ============================================================
   GAME.enterMap = function (id, x, y) {
     map = W().maps[id];
     P.map = id; P.x = x; P.y = y;
+    // never leave the player stuck inside a solid tile: spiral out to a free spot
+    if (!canStand(P.x, P.y)) {
+      outer:
+      for (let r = 1; r < 12; r++) {
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            const nx = x + dx * TS, ny = y + dy * TS;
+            if (canStand(nx, ny)) { P.x = nx; P.y = ny; break outer; }
+          }
+        }
+      }
+    }
     mobs = []; projectiles = []; grounds = []; corpses = [];
     bossActive = null;
     // populate zones
@@ -354,6 +375,7 @@
   };
   GAME.currentMap = () => map;
   GAME.mobs = () => mobs;
+
   function spawnMob(defId, x, y, zone, opts) {
     const def = D().MOBS[defId];
     if (!def) return null;
@@ -374,6 +396,7 @@
     const b = spawnMob(bs.mob, bs.x, bs.y, null);
     if (b) b.isMapBoss = true;
   }
+
   function updateZones(dt) {
     for (const z of map.mobZones) {
       z.timer -= dt;
@@ -392,6 +415,7 @@
       }
     }
   }
+
   // war front armies
   function updateWar(dt) {
     if (!map.warzone) return;
@@ -411,6 +435,7 @@
       spawnMob(pick, (z.x + z.w - 2) * TS - Math.random() * 40, (z.y + Math.random() * z.h) * TS, null, { warMob: true });
     }
   }
+
   // ============================================================
   // combat
   // ============================================================
@@ -468,7 +493,6 @@
     // drops
     for (const dr of def.drops || []) {
       if (Math.random() < dr.c) GAME.addItem(dr.i, dr.n || 1);
-      if (Math.random() < dr.c && dr.n) { } // handled above
     }
     if (def.boss) {
       map.bossDead = true;
@@ -488,6 +512,7 @@
       }
     }
   }
+
   function rollChestLoot(tier, boss) {
     const table = D().CHEST_LOOT[Math.min(6, tier)] || D().CHEST_LOOT[1];
     const out = [];
@@ -500,6 +525,7 @@
     if (Math.random() < 0.4) out.push({ id: 'potion_' + (tier >= 4 ? 'l' : tier >= 2 ? 'm' : 's'), n: 1 });
     return out;
   }
+
   function hurtPlayer(rawDmg, srcX, srcY, fx) {
     // shield buffs absorb
     let dmg = Math.max(1, Math.floor(rawDmg * 100 / (100 + P.def * 5)));
@@ -524,6 +550,7 @@
     if (P.hp <= 0) playerDie();
   }
   GAME.hurtPlayer = hurtPlayer;
+
   function playerDie() {
     P.hp = 0; P.deaths++;
     const lost = Math.floor(P.gold * 0.1);
@@ -572,6 +599,7 @@
     AUDIO.sfx('heal');
     UI.toast('The Light embraces you. Respawn point set.', '#a8e89a');
   };
+
   // ---------------- attacks & spells ----------------
   let atkCd = 0;
   function tryAttack() {
@@ -656,6 +684,7 @@
     }
     UI.refreshHud();
   };
+
   const spellCds = {};
   GAME.spellCd = id => spellCds[id] || 0;
   GAME.castSpell = function (id) {
@@ -816,8 +845,10 @@
     }
     return best;
   }
+
   function shoot(p) { p.uid = uid++; projectiles.push(p); }
   GAME.shoot = shoot;
+
   // ---------------- fx helpers ----------------
   function float(x, y, text, color) { floats.push({ x, y, text: String(text), color, t: 1.1, vy: -26 }); }
   GAME.float = float;
@@ -845,6 +876,7 @@
       particles.push({ x, y, vx: Math.cos(a) * r * 2.2, vy: Math.sin(a) * r * 2.2, t: 0.4, color, size: 3 });
     }
   }
+
   // ============================================================
   // movement / collision
   // ============================================================
@@ -868,6 +900,7 @@
     }
     return true;
   }
+
   // ============================================================
   // interaction (E key)
   // ============================================================
@@ -950,6 +983,7 @@
       if (tpl.type === 'deliver' && tpl.to === target) { j.progress = 1; j.done = true; UI.toast('Delivered! Return to the guild.', '#a8e89a'); AUDIO.sfx('quest'); }
     }
   }
+
   // ============================================================
   // update loop
   // ============================================================
@@ -965,6 +999,7 @@
     if (P.hurtT) P.hurtT = Math.max(0, P.hurtT - dt);
     saveTimer += dt;
     if (saveTimer > 12) { saveTimer = 0; GAME.save(); }
+
     // buffs
     let buffsChanged = false;
     for (const b of P.buffs) {
@@ -984,9 +1019,11 @@
     // natural regen out of combat
     P.mp = Math.min(P.maxMp, P.mp + (1.2 + P.base.int * 0.06) * dt);
     if (!mobs.some(m => m.state === 'chase' && !m.friendly)) P.hp = Math.min(P.maxHp, P.hp + 1.0 * dt);
+
     // tile damage (lava)
     const td = W().tileDamage(map, P.x / TS | 0, P.y / TS | 0);
     if (td) { P.hp -= td * dt * 3; P.hurtT = 0.1; if (P.hp <= 0) { playerDie(); return; } }
+
     // input movement
     let dx = 0, dy = 0;
     if (keys.w || keys.arrowup) dy -= 1;
@@ -1007,9 +1044,11 @@
       P.animT = (P.animT || 0) + dt;
     } else P.animT = 0;
     P.moving = !!moving;
+
     // spawns & war
     updateZones(dt);
     updateWar(dt);
+
     // mobs
     updateMobs(dt);
     // escort follows
@@ -1045,16 +1084,20 @@
     floats = floats.filter(f => f.t > 0);
     for (const c of corpses) c.t -= dt;
     corpses = corpses.filter(c => c.t > 0);
+
     // camera
     const vw = canvas.width / SCALE, vh = canvas.height / SCALE;
     cam.x = Math.max(0, Math.min(map.w * TS - vw, P.x - vw / 2));
     cam.y = Math.max(0, Math.min(map.h * TS - vh, P.y - vh / 2));
+
     // interact tip
     const it = getInteractable();
     UI.showInteract(it);
+
     // network position
     if (window.NET) NET.tick(dt);
   }
+
   // ---------------- mob AI ----------------
   function updateMobs(dt) {
     for (const mb of mobs) {
@@ -1069,6 +1112,7 @@
       }
       mb.dots = mb.dots.filter(d => d.t > 0);
       if (mb.hp <= 0) { killMob(mb); continue; }
+
       const def = mb.def;
       let speed = def.speed * (mb.slow > 0 ? 0.5 : 1);
       // pick target: war mobs fight each other
@@ -1089,6 +1133,7 @@
       }
       // player in a safe zone: monsters give up
       if (tgtIsPlayer && W().safeZoneAt(map, P.x, P.y)) { tgt = null; mb.state = 'idle'; }
+
       if (tgt) {
         mb.state = 'chase';
         const dx = tgt.x - mb.x, dy = (tgt.y - (tgtIsPlayer ? 8 : 0)) - mb.y;
@@ -1206,6 +1251,7 @@
       }
     }
   }
+
   function updateEscort(dt) {
     if (!escort) return;
     const d = Math.hypot(P.x - escort.x, P.y - escort.y);
@@ -1249,6 +1295,7 @@
     escort = null;
     UI.refreshQuests();
   }
+
   function updateProjectiles(dt) {
     for (const pr of projectiles) {
       pr.x += pr.vx * dt; pr.y += pr.vy * dt;
@@ -1298,6 +1345,7 @@
     }
     projectiles = projectiles.filter(p => p.life > 0);
   }
+
   // ============================================================
   // rendering
   // ============================================================
@@ -1401,6 +1449,7 @@
     // lighting overlay
     drawLighting(w, h);
   }
+
   function drawObject(o) {
     const img = PXA.props[o.type] || PXA.props.rock;
     const ox = o.x * TS + TS / 2 - img.width / 2;
@@ -1556,6 +1605,7 @@
       ctx.fillRect(mb.x + 4 - Math.sin(frameT * 8) * 5, mb.y - h2 - 4, 2, 2);
     }
   }
+
   // lighting: day/night + darkness in dungeons + light sources
   let lightCanvas = null;
   function drawLighting(w, h) {
@@ -1603,6 +1653,7 @@
     lg.globalCompositeOperation = 'source-over';
     ctx.drawImage(lightCanvas, 0, 0);
   }
+
   // ============================================================
   // save / load
   // ============================================================
@@ -1645,6 +1696,7 @@
     } catch (e) { }
     return null;
   };
+
   // ============================================================
   // boot
   // ============================================================
@@ -1690,6 +1742,7 @@
     UI.refreshHotbar();
   }
   GAME.useHotbar = useHotbar;
+
   GAME.start = function (isNew) {
     heroSheet = PXA.makeHero(P.look);
     UI.setPortrait(heroSheet.portrait);
@@ -1711,6 +1764,7 @@
   GAME.refreshHeroSheet = function () { heroSheet = PXA.makeHero(P.look); };
   GAME.isRunning = () => running;
   GAME.escort = () => escort;
+
   let lastT = 0;
   function loop(t) {
     requestAnimationFrame(loop);

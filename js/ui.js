@@ -212,7 +212,8 @@
           s.onmouseleave = hideTooltip;
           s.onclick = () => { GAME.unequip(slotName); hideTooltip(); };
         } else {
-          s.innerHTML = '<div class="ph">' + slotName.slice(0, 4).toUpperCase() + '</div>';
+          const short = { helmet: 'HELM', amulet: 'AMU', ring: 'RING', weapon: 'WPN', armor: 'ARM', shield: 'SHLD', boots: 'BOOT' };
+          s.innerHTML = '<div class="ph">' + (short[slotName] || slotName.toUpperCase()) + '</div>';
         }
         eg.appendChild(s);
       }
