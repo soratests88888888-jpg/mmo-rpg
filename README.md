@@ -20,7 +20,13 @@ A complete browser-based pixel-art MMO RPG in plain HTML/JS/Canvas.
 - **Crafting** — potions, torches, **Magic Light** (magic stones + crystal), weapons, armor
 - **Economy** — shops, inns (heal + set respawn), merchant permit, and a **live player-to-player marketplace**
 - **Multiplayer (Supabase)** — see other players move in real time, global chat, PvP arena duels in the capital, cloud character saves, shared marketplace. Falls back to offline single-player automatically
-- **Chiptune soundtrack** — 8 looping tracks (title, town, overworld, dungeon, boss, demon lands, snow, arena) + ~25 sound effects, all WebAudio-synthesized
+- **Open-world duels & Hall of Legends** — challenge any player anywhere with **P** (they accept with P); PvP wins, levels, kills and boss kills ranked on the live **leaderboard (L)**
+- **The Demon King's Citadel** — the true endgame beyond Azgareth: halls of Demon Guards, Greater Demons and Void Reapers, four rune-bearing **Generals** (Ignaroth, Morgrim, Voltrag, Nyxara) and **Demon King Malzevoth**, the hardest boss in the game
+- **The Runeforge** — Malzevoth's guaranteed **Master Rune** unlocks fully custom magic: bind element runes (fire/frost/storm/void/dawn) + form runes (arrow/ring/tempest) into named spells whose power is written at your level
+- **Cross-class training** — any class can learn other schools' skills for gold once experienced enough; magic always scales with INT, so a trained swordsman really can throw fireballs
+- **Roaming dragon bosses** — the Emerald Wyrm, Frost Wyrm Sylvarra and Void Dragon Karvenoth nest in the open world
+- **Level-scaled loot** — every monster can (but won't always) drop from a rarity table tuned to its strength: weak mobs drop little and poor, endgame mobs can drop legendaries and mythicals; bosses keep guaranteed loot
+- **Chiptune soundtrack** — 8 looping tracks (title, town, overworld, dungeon, boss, demon lands, snow, arena) + ~25 sound effects, all WebAudio-synthesized and distance-attenuated
 
 ## Controls
 

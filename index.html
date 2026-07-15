@@ -361,8 +361,8 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
     <input id="chat-input" maxlength="160" placeholder="Say something... (Enter)">
   </div>
 
-  <div id="keyguide"><b>WASD</b> move <b>SPACE</b> attack <b>E</b> interact <b>1-8</b> skills<br>
-  <b>I</b>nventory <b>C</b>haracter <b>K</b> skills <b>Q</b>uests <b>M</b>ap <b>Enter</b> chat</div>
+  <div id="keyguide"><b>WASD</b> move <b>SPACE</b> attack <b>E</b> interact <b>1-8</b> skills <b>P</b> duel<br>
+  <b>I</b>nventory <b>C</b>har <b>K</b> skills <b>Q</b>uests <b>M</b>ap <b>L</b> ranks <b>Enter</b> chat</div>
   <div id="interact-tip"></div>
 </div>
 
@@ -428,6 +428,17 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 <div class="gwin panel" id="win-settings">
   <div class="p-title">SETTINGS <span class="x-btn" data-close="win-settings">X</span></div>
   <div class="p-body" id="settings-body"></div>
+</div>
+
+<div class="gwin panel" id="win-runes" style="top:8vh;left:50%;transform:translateX(-50%);width:520px;">
+  <div class="p-title">⚒ RUNEFORGE <span class="x-btn" data-close="win-runes">X</span></div>
+  <div class="p-body" id="runes-body"></div>
+</div>
+
+<div class="gwin panel" id="win-leaderboard" style="top:8vh;left:50%;transform:translateX(-50%);width:460px;">
+  <div class="p-title">HALL OF LEGENDS <span class="x-btn" data-close="win-leaderboard">X</span></div>
+  <div class="tab-bar" id="lb-tabs"></div>
+  <div class="p-body" id="lb-body"></div>
 </div>
 
 <div class="gwin panel" id="win-dialog">

@@ -821,19 +821,42 @@
     '.....BB.BBB.....',
     '.....BB.BBB.....',
   ];
-  // walk frames: swap leg rows (16..20)
-  function heroWalkFrames(rows) {
-    const a = rows.slice();
-    const b = rows.slice();
-    // frame A: left leg forward (shift left cols of leg rows up visually -> raise right boot)
-    for (let i = 16; i < rows.length; i++) {
-      a[i] = shiftRows([rows[i]], 0, 0, 1)[0];
-      b[i] = shiftRows([rows[i]], 0, 0, -1)[0];
-    }
-    // lift feet: blank last row alternately for step bounce
-    const blank = '.'.repeat(rows[0].length);
-    const a2 = a.slice(); a2[rows.length - 1] = a2[rows.length - 1].replace(/B/g, (m, i) => m); // keep
-    return [rows, a, b];
+  // hand-authored walk cycles: last 5 rows (legs) are replaced per frame.
+  // frame A = left stride, frame B = right stride; stand frame between them.
+  const LEG_FRAMES = {
+    front: {
+      a: [
+        '....PPP..PPP....',
+        '....PPP..PPP....',
+        '....BBB..PPP....',
+        '.........BBB....',
+        '.........BBB....'],
+      b: [
+        '....PPP..PPP....',
+        '....PPP..PPP....',
+        '....PPP..BBB....',
+        '....BBB.........',
+        '....BBB.........'],
+    },
+    side: {
+      a: [
+        '.....PPPPP......',
+        '.....PPPPP......',
+        '....PP..PPP.....',
+        '....BB..BBB.....',
+        '...BB....BBB....'],
+      b: [
+        '.....PPPPP......',
+        '.....PPPPP......',
+        '.....PPPP.......',
+        '.....BBBB.......',
+        '.....BBBB.......'],
+    },
+  };
+  function heroWalkFrames(rows, facing) {
+    const legs = facing === 'side' ? LEG_FRAMES.side : LEG_FRAMES.front;
+    const body = rows.slice(0, rows.length - 5);
+    return [rows, body.concat(legs.a), body.concat(legs.b)];
   }
 
   const HAIRS = PXA.HAIRS = [
@@ -891,7 +914,7 @@
   PXA.makeHero = function (look) {
     const pal = heroPal(look);
     function buildFacing(rows, facing) {
-      const frames = heroWalkFrames(rows);
+      const frames = heroWalkFrames(rows, facing);
       return frames.map(fr => {
         const body = px(fr, pal, 16);
         const g = ctx2d(body);

@@ -123,6 +123,16 @@
   item('tome_meteor', { name: 'Tome: Meteor', type: 'tome', icon: 'tome', teach: 'meteor', rarity: 'legendary', price: 9000, stack: 1, desc: 'Teaches the Meteor spell (Mage).' });
   item('tome_bladebeam', { name: 'Manual: Blade Beam', type: 'tome', icon: 'tome', iconPal: { c: '#4c5058', d: '#30343a' }, teach: 'blade_beam', rarity: 'epic', price: 3500, stack: 1, desc: 'Teaches Blade Beam (Swordsman).' });
   item('tome_earthslam', { name: 'Manual: Earth Slam', type: 'tome', icon: 'tome', iconPal: { c: '#8a5a2c', d: '#5c3a18' }, teach: 'earth_slam', rarity: 'epic', price: 3500, stack: 1, desc: 'Teaches Earth Slam (Tank).' });
+  // --- runes (only drop from the Demon King and his generals) ---
+  item('rune_master', { name: 'Master Rune', type: 'rune', icon: 'magiclight', iconPal: { c: '#ff4f6d', l: '#ffc8d8', w: '#ffffff', g: '#f2c14b' }, rarity: 'mythical', price: 100000, stack: 1, desc: 'The Demon King\'s rune. Holding it lets you forge your own spells from element and form runes. (Use it to open the Runeforge)' });
+  item('rune_fire', { name: 'Rune of Fire', type: 'rune', icon: 'magicstone', iconPal: { p: '#d84a1a', d: '#8a2e12', l: '#f8a060', w: '#ffe0c0' }, rarity: 'mythical', price: 25000, stack: 9, runeElement: 'fire', desc: 'A primal rune of flame, torn from a Demon General.' });
+  item('rune_frost', { name: 'Rune of Frost', type: 'rune', icon: 'magicstone', iconPal: { p: '#4a8ad0', d: '#2a4f96', l: '#90c0f0', w: '#e0f4ff' }, rarity: 'mythical', price: 25000, stack: 9, runeElement: 'frost', desc: 'A primal rune of endless winter.' });
+  item('rune_storm', { name: 'Rune of Storms', type: 'rune', icon: 'magicstone', iconPal: { p: '#d8a83a', d: '#a07820', l: '#f8dc80', w: '#fff8d0' }, rarity: 'mythical', price: 25000, stack: 9, runeElement: 'storm', desc: 'A primal rune crackling with thunder.' });
+  item('rune_void', { name: 'Rune of the Void', type: 'rune', icon: 'magicstone', iconPal: { p: '#57297c', d: '#341252', l: '#8a4fc8', w: '#e0c8ff' }, rarity: 'mythical', price: 25000, stack: 9, runeElement: 'void', desc: 'A primal rune of hungry darkness.' });
+  item('rune_dawn', { name: 'Rune of Dawn', type: 'rune', icon: 'magicstone', iconPal: { p: '#f2c14b', d: '#b0812a', l: '#ffdf8e', w: '#fff8e0' }, rarity: 'mythical', price: 25000, stack: 9, runeElement: 'dawn', desc: 'A primal rune of sacred light.' });
+  item('rune_arrow', { name: 'Rune of the Arrow', type: 'rune', icon: 'crystal', iconPal: { c: '#e05050', d: '#8a2020', l: '#ffb0a0' }, rarity: 'mythical', price: 25000, stack: 9, runeForm: 'arrow', desc: 'A form rune: shapes magic into a piercing bolt.' });
+  item('rune_ring', { name: 'Rune of the Ring', type: 'rune', icon: 'crystal', iconPal: { c: '#57c14f', d: '#2e8c2a', l: '#c0f0b0' }, rarity: 'mythical', price: 25000, stack: 9, runeForm: 'ring', desc: 'A form rune: shapes magic into a burst around you.' });
+  item('rune_tempest', { name: 'Rune of the Tempest', type: 'rune', icon: 'crystal', iconPal: { c: '#b45fe0', d: '#7c3aa0', l: '#e0b8f8' }, rarity: 'mythical', price: 25000, stack: 9, runeForm: 'tempest', desc: 'A form rune: shapes magic into a raging storm on the ground.' });
 
   // ---------------- spells & skills ----------------
   // cls: mage | swordsman | tank | ranger | all
@@ -165,6 +175,19 @@
   // ranger
   spell('double_shot', { name: 'Double Shot', cls: 'ranger', lvl: 2, mp: 6, cd: 2.5, type: 'fan', dmg: 12, scale: 1.3, count: 2, speed: 300, icon: 'slash', color: '#a8e89a', desc: 'Loose two arrows at once.' });
   spell('arrow_rain', { name: 'Arrow Rain', cls: 'ranger', lvl: 12, mp: 20, cd: 6.0, type: 'ground', dmg: 16, scale: 1.2, radius: 60, dur: 2, icon: 'blizzard', color: '#a8e89a', desc: 'Arrows fall on the target area.' });
+  // expanded spellbook
+  spell('arcane_orb', { name: 'Arcane Orb', cls: 'mage', lvl: 5, mp: 12, cd: 2.2, type: 'proj', dmg: 22, scale: 1.3, speed: 150, aoe: 30, icon: 'dark', color: '#c88ae8', desc: 'A slow orb that detonates on impact.' });
+  spell('icicle_lance', { name: 'Icicle Lance', cls: 'mage', lvl: 17, mp: 18, cd: 2.4, type: 'proj', dmg: 30, scale: 1.5, speed: 340, icon: 'ice', color: '#8cd4f0', fx: 'slow', desc: 'A piercing lance of ice.' });
+  spell('inferno', { name: 'Inferno', cls: 'mage', lvl: 23, mp: 30, cd: 7.0, type: 'nova', dmg: 34, scale: 1.4, radius: 75, icon: 'fire', color: '#f08040', fx: 'burn', desc: 'Erupt in flames, scorching all around you.' });
+  spell('void_rift', { name: 'Void Rift', cls: 'mage', lvl: 37, mp: 48, cd: 10.0, type: 'ground', dmg: 26, scale: 1.5, radius: 65, dur: 4, icon: 'dark', color: '#8a4fc8', desc: 'Tear open a rift that devours foes.' });
+  spell('cross_slash', { name: 'Cross Slash', cls: 'swordsman', lvl: 5, mp: 9, cd: 3.5, type: 'melee', dmg: 24, scale: 1.5, arc: 1.2, icon: 'slash', color: '#dce4ec', desc: 'Two crossing cuts in one motion.' });
+  spell('sword_dance', { name: 'Sword Dance', cls: 'swordsman', lvl: 21, mp: 20, cd: 6.0, type: 'nova', dmg: 30, scale: 1.5, radius: 60, icon: 'whirl', color: '#dce4ec', desc: 'A deadly dance of steel around you.' });
+  spell('guard_break', { name: 'Guard Break', cls: 'tank', lvl: 8, mp: 10, cd: 5.0, type: 'melee', dmg: 18, scale: 1.3, stun: 0.8, arc: 0.9, icon: 'ironwall', color: '#b8bcc4', desc: 'Crush defenses and stagger the foe.' });
+  spell('fortress', { name: 'Fortress', cls: 'tank', lvl: 16, mp: 20, cd: 16.0, type: 'buff', buff: { shield: 80, defUp: 0.3, dur: 10 }, icon: 'ironwall', color: '#b8bcc4', desc: 'Become an unbreakable fortress.' });
+  spell('piercing_shot', { name: 'Piercing Shot', cls: 'ranger', lvl: 6, mp: 8, cd: 2.5, type: 'proj', dmg: 18, scale: 1.5, speed: 360, icon: 'slash', color: '#a8e89a', desc: 'An arrow that punches through armor.' });
+  spell('multishot', { name: 'Multishot', cls: 'ranger', lvl: 18, mp: 18, cd: 4.5, type: 'fan', dmg: 16, scale: 1.3, count: 5, speed: 300, icon: 'blizzard', color: '#a8e89a', desc: 'Five arrows in a wide fan.' });
+  spell('blink', { name: 'Blink', cls: 'all', lvl: 14, mp: 14, cd: 5.0, type: 'dash', dmg: 0, dist: 110, icon: 'haste', color: '#6ad4e8', desc: 'Step through space in a flash.' });
+  spell('smite', { name: 'Smite', cls: 'all', lvl: 25, mp: 24, cd: 4.0, type: 'strike', dmg: 36, scale: 1.4, range: 130, fx: 'holy', icon: 'holy', color: '#ffdf8e', desc: 'Call down holy judgement on a foe.' });
 
   // ---------------- classes ----------------
   DATA.CLASSES = {
@@ -216,6 +239,21 @@
   mobd('demon_general', { name: 'General Vorgath', sprite: 'knight', pal: { m: '#3a2440', d: '#241428', l: '#57297c', e: '#e05050', p: '#8a2e20', t: '#e05050' }, boss: true, lvl: 34, hp: 7200, atk: 92, def: 30, xp: 7000, gold: [900, 1500], speed: 54, aggro: 280, atkCd: 1.1, scale: 2.0, pattern: 'dash', demon: true, drops: [{ i: 'demon_blade', c: .3 }, { i: 'demon_plate', c: .3 }, { i: 'demon_horn', c: 1, n: 8 }] });
   mobd('ancient_dragon', { name: 'Vharaxes the Ancient', sprite: 'dragon', boss: true, lvl: 38, hp: 11000, atk: 110, def: 36, xp: 12000, gold: [1600, 2600], speed: 60, aggro: 300, atkCd: 1.2, scale: 2.2, pattern: 'breath', ranged: 160, proj: '#f08040', fx: 'burn', drops: [{ i: 'dragon_scale', c: 1, n: 6 }, { i: 'dragon_shield', c: .4 }, { i: 'dragon_helm', c: .35 }, { i: 'dragon_amulet', c: .3 }] });
   mobd('demon_lord', { name: 'Demon Lord Azgareth', sprite: 'demonlord', boss: true, lvl: 42, hp: 18000, atk: 130, def: 40, xp: 25000, gold: [3000, 5000], speed: 52, aggro: 320, atkCd: 1.0, scale: 2.0, pattern: 'phases', demon: true, drops: [{ i: 'demon_heart', c: 1 }, { i: 'hero_sword', c: .25 }, { i: 'dawn_staff', c: .25 }, { i: 'dawn_armor', c: .2 }, { i: 'void_amulet', c: .25 }] });
+  // --- Demon King's Citadel forces ---
+  mobd('demon_guard', { name: 'Demon Guard', sprite: 'knight', pal: { m: '#4a1a2c', d: '#2c0e1a', l: '#7c2c48', e: '#f2d34b', p: '#c8402e', t: '#e05050' }, lvl: 38, hp: 900, atk: 95, def: 28, xp: 700, gold: [60, 120], speed: 52, aggro: 150, atkCd: 1.1, demon: true, drops: [{ i: 'demon_horn', c: .5 }, { i: 'potion_l', c: .2 }] });
+  mobd('greater_demon', { name: 'Greater Demon', sprite: 'brute', pal: { p: '#8a2038', d: '#5a1020', l: '#c04058', e: '#f8c83a', h: '#1a0a10', t: '#e8e0c8' }, lvl: 42, hp: 1400, atk: 115, def: 32, xp: 1100, gold: [90, 170], speed: 42, aggro: 140, atkCd: 1.4, demon: true, drops: [{ i: 'demon_horn', c: .7 }, { i: 'elixir', c: .1 }] });
+  mobd('void_reaper', { name: 'Void Reaper', sprite: 'wraith', pal: { w: '#6a4a8c', d: '#42285c', l: '#9c74c8', e: '#ff5070', k: '#180c24' }, lvl: 45, hp: 1200, atk: 130, def: 26, xp: 1400, gold: [100, 200], speed: 66, aggro: 170, atkCd: 1.2, demon: true, undead: true, floaty: true, ranged: 140, proj: '#b45fe0', drops: [{ i: 'magic_stone', c: .9 }, { i: 'void_amulet', c: .01 }] });
+  // the four Demon King Generals — the only source of element/form runes
+  mobd('gen_ignaroth', { name: 'General Ignaroth the Cinder', sprite: 'golem', pal: { r: '#8a2012', d: '#4c0e06', l: '#e05030', e: '#f8c83a', m: '#601408' }, boss: true, lvl: 46, hp: 14000, atk: 140, def: 42, xp: 16000, gold: [1600, 2600], speed: 34, aggro: 280, atkCd: 1.3, scale: 2.1, pattern: 'slam', fx: 'burn', demon: true, drops: [{ i: 'rune_fire', c: .4 }, { i: 'rune_arrow', c: .3 }, { i: 'demon_horn', c: 1, n: 6 }] });
+  mobd('gen_morgrim', { name: 'General Morgrim the Frozen', sprite: 'yeti', pal: { w: '#7a9ac8', d: '#4a648c', l: '#b8d4f4', e: '#ff5070', s: '#5c7ca8', m: '#2c4468' }, boss: true, lvl: 46, hp: 14000, atk: 135, def: 46, xp: 16000, gold: [1600, 2600], speed: 40, aggro: 280, atkCd: 1.4, scale: 2.1, pattern: 'nova', fx: 'slow', demon: true, drops: [{ i: 'rune_frost', c: .4 }, { i: 'rune_ring', c: .3 }, { i: 'demon_horn', c: 1, n: 6 }] });
+  mobd('gen_voltrag', { name: 'General Voltrag the Storm', sprite: 'knight', pal: { m: '#7c6a1a', d: '#4c400c', l: '#d8b83a', e: '#fff8c0', p: '#d8a83a', t: '#fff8c0' }, boss: true, lvl: 47, hp: 13000, atk: 150, def: 38, xp: 17000, gold: [1700, 2800], speed: 60, aggro: 300, atkCd: 1.0, scale: 2.0, pattern: 'dash', demon: true, drops: [{ i: 'rune_storm', c: .4 }, { i: 'rune_arrow', c: .3 }, { i: 'demon_horn', c: 1, n: 6 }] });
+  mobd('gen_nyxara', { name: 'General Nyxara the Hollow', sprite: 'lich', pal: { b: '#d8c8e8', d: '#9a86b8', r: '#2c1a40', rd: '#180c28', e: '#ff5070', g: '#b45fe0' }, boss: true, lvl: 47, hp: 12000, atk: 155, def: 34, xp: 17000, gold: [1700, 2800], speed: 44, aggro: 320, atkCd: 1.6, scale: 2.0, pattern: 'volley', proj: '#b45fe0', demon: true, undead: true, floaty: true, drops: [{ i: 'rune_void', c: .4 }, { i: 'rune_tempest', c: .3 }, { i: 'demon_horn', c: 1, n: 6 }] });
+  // THE hardest boss in the game — guaranteed Master Rune
+  mobd('demon_king', { name: 'Demon King Malzevoth', sprite: 'demonlord', pal: { k: '#1a0a14', d: '#0c040a', p: '#8a1030', l: '#e03050', e: '#ffdf5e', h: '#2c0818', f: '#ffc8d8', t: '#f2c14b' }, boss: true, lvl: 50, hp: 40000, atk: 175, def: 52, xp: 80000, gold: [8000, 14000], speed: 58, aggro: 340, atkCd: 0.9, scale: 2.4, pattern: 'phases', demon: true, drops: [{ i: 'rune_master', c: 1 }, { i: 'rune_dawn', c: .5 }, { i: 'demon_heart', c: 1 }, { i: 'hero_sword', c: .2 }, { i: 'dawn_armor', c: .2 }, { i: 'void_amulet', c: .2 }] });
+  // --- roaming dragon world bosses ---
+  mobd('emerald_wyrm', { name: 'Emerald Wyrm', sprite: 'dragon', pal: { s: '#3f8c3a', d: '#276022', l: '#66b053', w: '#2e7c46', e: '#f2d34b', b: '#d8e8a8', f: '#a8e88a' }, boss: true, lvl: 22, hp: 2600, atk: 52, def: 18, xp: 2400, gold: [350, 620], speed: 58, aggro: 280, atkCd: 1.2, scale: 1.8, pattern: 'breath', ranged: 150, proj: '#a8e89a', fx: 'poison', drops: [{ i: 'dragon_scale', c: .8, n: 2 }, { i: 'elven_bow', c: .25 }, { i: 'swift_boots', c: .2 }] });
+  mobd('frost_wyrm', { name: 'Frost Wyrm Sylvarra', sprite: 'dragon', pal: { s: '#5a8ac8', d: '#38618c', l: '#8cb8e8', w: '#4a78b0', e: '#f0f8ff', b: '#d8ecfc', f: '#c8e4f4' }, boss: true, lvl: 32, hp: 7000, atk: 82, def: 28, xp: 6500, gold: [800, 1400], speed: 62, aggro: 300, atkCd: 1.1, scale: 2.0, pattern: 'breath', ranged: 160, proj: '#8cd4f0', fx: 'slow', drops: [{ i: 'dragon_scale', c: 1, n: 3 }, { i: 'frost_sword', c: .3 }, { i: 'tome_blizzard', c: .25 }] });
+  mobd('void_dragon', { name: 'Void Dragon Karvenoth', sprite: 'dragon', pal: { s: '#3c2450', d: '#221230', l: '#6a4a8c', w: '#2c1a40', e: '#ff5070', b: '#c8a8e8', f: '#b45fe0' }, boss: true, lvl: 44, hp: 16000, atk: 125, def: 38, xp: 18000, gold: [2000, 3600], speed: 66, aggro: 320, atkCd: 1.0, scale: 2.2, pattern: 'breath', ranged: 170, proj: '#b45fe0', demon: true, drops: [{ i: 'dragon_scale', c: 1, n: 5 }, { i: 'demon_blade', c: .25 }, { i: 'kings_ring', c: .3 }, { i: 'void_amulet', c: .12 }] });
 
   // ---------------- dungeon loot tables (chests) ----------------
   DATA.CHEST_LOOT = {
@@ -274,6 +312,40 @@
     { rank: 'SSS', type: 'kill', mob: 'demon_brute', n: 10, name: 'Brute Force', desc: 'Demon Brutes shatter our siege lines. Fell 10.', gold: 8000, xp: 16000, pts: 100 },
     // SSSS
     { rank: 'SSSS', type: 'boss', mob: 'demon_lord', name: 'THE DEMON LORD', desc: 'Azgareth waits on his throne in Demonspire. The war ends with one of you.', gold: 30000, xp: 60000, pts: 250 },
+    // ---- expanded job board ----
+    { rank: 'F', type: 'kill', mob: 'mushroom', n: 4, name: 'Spore Patrol', desc: 'Myconid spores drift into town. Stomp 4 of them.', gold: 35, xp: 25, pts: 4 },
+    { rank: 'F', type: 'gather', item: 'slime_gel', n: 4, name: 'Sticky Business', desc: 'The cobbler glues soles with slime gel. Bring 4.', gold: 32, xp: 22, pts: 4 },
+    { rank: 'F', type: 'kill', mob: 'slime', n: 10, name: 'Slime Overrun', desc: 'They just keep coming. Cull 10 slimes.', gold: 60, xp: 45, pts: 6 },
+    { rank: 'E', type: 'kill', mob: 'bat', n: 8, name: 'Belfry Cleanup', desc: 'Cave bats roost in the mill. Clear 8.', gold: 85, xp: 70, pts: 7 },
+    { rank: 'E', type: 'gather', item: 'iron_ore', n: 5, name: 'Ore Order', desc: 'The smithy needs 5 iron ore. Veins dot the fields.', gold: 90, xp: 65, pts: 7 },
+    { rank: 'E', type: 'kill', mob: 'redslime', n: 6, name: 'Burning Jellies', desc: 'Red slimes scorch the crops. Quench 6.', gold: 95, xp: 80, pts: 8 },
+    { rank: 'E', type: 'deliver', to: 'emberport', name: 'Desert Dispatch', desc: 'Carry sealed orders to Trader Nadia in Emberport.', gold: 160, xp: 120, pts: 10 },
+    { rank: 'D', type: 'kill', mob: 'goblin_archer', n: 8, name: 'Arrow Thieves', desc: 'Goblin archers steal fletching supplies. Down 8.', gold: 180, xp: 170, pts: 13 },
+    { rank: 'D', type: 'kill', mob: 'blueslime', n: 8, name: 'Cold Snap', desc: 'Frost slimes freeze the wells. Melt 8.', gold: 175, xp: 165, pts: 12 },
+    { rank: 'D', type: 'gather', item: 'raw_meat', n: 8, name: 'Feast Preparations', desc: 'The harvest feast needs 8 cuts of meat.', gold: 165, xp: 140, pts: 12 },
+    { rank: 'D', type: 'deliver', to: 'frosthold', name: 'Northbound Post', desc: 'Deliver winter supplies manifest to Hunter Skald in Frosthold.', gold: 220, xp: 200, pts: 15 },
+    { rank: 'C', type: 'kill', mob: 'skeleton_mage', n: 8, name: 'Silence the Bones', desc: 'Skeleton mages chant in the crypt. Silence 8.', gold: 420, xp: 470, pts: 22 },
+    { rank: 'C', type: 'gather', item: 'bone_frag', n: 10, name: 'Reliquary Order', desc: 'The temple wants 10 bone fragments for cleansing rites.', gold: 380, xp: 360, pts: 20 },
+    { rank: 'C', type: 'escort', to: 'emberport', name: 'Caravan South', desc: 'Escort a spice merchant across the dunes to Emberport.', gold: 550, xp: 520, pts: 26 },
+    { rank: 'B', type: 'kill', mob: 'direwolf', n: 8, name: 'Alpha Hunt', desc: 'Dire wolves lead the packs now. Cull 8.', gold: 800, xp: 950, pts: 31 },
+    { rank: 'B', type: 'gather', item: 'feather', n: 8, name: 'Fletcher\'s Contract', desc: 'Harpy feathers make the finest arrows. Bring 8.', gold: 760, xp: 900, pts: 30 },
+    { rank: 'B', type: 'boss', mob: 'emerald_wyrm', name: 'The Green Terror', desc: 'A wyrm nests in the western woods, poisoning the streams. Slay the Emerald Wyrm.', gold: 1200, xp: 1600, pts: 40 },
+    { rank: 'A', type: 'kill', mob: 'imp', n: 10, name: 'Fire Starters', desc: 'Imps torch the eastern farms. Extinguish 10.', gold: 1450, xp: 2100, pts: 43 },
+    { rank: 'A', type: 'kill', mob: 'hound', n: 10, name: 'Hounds of Ash', desc: 'Lava hounds prowl the deep roads. Put down 10.', gold: 1500, xp: 2200, pts: 44 },
+    { rank: 'S', type: 'kill', mob: 'icebat', n: 12, name: 'Frozen Skies', desc: 'Frost bats blind the northern watch. Clear 12.', gold: 2500, xp: 4100, pts: 56 },
+    { rank: 'S', type: 'kill', mob: 'drake', n: 8, name: 'Drake Season', desc: 'Ember drakes circle the passes. Ground 8 for good.', gold: 2700, xp: 4400, pts: 58 },
+    { rank: 'SS', type: 'boss', mob: 'frost_wyrm', name: 'Sylvarra', desc: 'The Frost Wyrm Sylvarra has woken in the northern peaks. End her long winter.', gold: 5500, xp: 10000, pts: 85 },
+    { rank: 'SS', type: 'kill', mob: 'lich', n: 6, name: 'Council of Bones', desc: 'Six liches serve the Rift. Unmake them.', gold: 5200, xp: 9500, pts: 82 },
+    { rank: 'SS', type: 'gather', item: 'dragon_scale', n: 5, name: 'Scales of Legend', desc: 'The Royal Forge will pay a fortune for 5 dragon scales.', gold: 6000, xp: 8800, pts: 80 },
+    { rank: 'SSS', type: 'boss', mob: 'void_dragon', name: 'Karvenoth', desc: 'The Void Dragon Karvenoth circles the corruption. Even the demons fear it.', gold: 14000, xp: 26000, pts: 140 },
+    { rank: 'SSS', type: 'kill', mob: 'demon_guard', n: 10, name: 'Citadel Vanguard', desc: 'The Demon King\'s guards mass at his gates. Break 10 of them.', gold: 10000, xp: 20000, pts: 115 },
+    { rank: 'SSSS', type: 'kill', mob: 'greater_demon', n: 8, name: 'Greater Purge', desc: 'Greater Demons stalk the Citadel halls. Fell 8.', gold: 18000, xp: 35000, pts: 160 },
+    { rank: 'SSSS', type: 'kill', mob: 'void_reaper', n: 8, name: 'Reap the Reapers', desc: 'Void Reapers harvest souls for the King. Banish 8.', gold: 20000, xp: 38000, pts: 170 },
+    { rank: 'SSSS', type: 'boss', mob: 'gen_ignaroth', name: 'The Cinder General', desc: 'Ignaroth guards the Citadel forges. His rune of fire can be yours.', gold: 25000, xp: 45000, pts: 200 },
+    { rank: 'SSSS', type: 'boss', mob: 'gen_morgrim', name: 'The Frozen General', desc: 'Morgrim froze a thousand knights. Take his rune of frost.', gold: 25000, xp: 45000, pts: 200 },
+    { rank: 'SSSS', type: 'boss', mob: 'gen_voltrag', name: 'The Storm General', desc: 'Voltrag strikes faster than lightning. Take his rune of storms.', gold: 25000, xp: 45000, pts: 200 },
+    { rank: 'SSSS', type: 'boss', mob: 'gen_nyxara', name: 'The Hollow General', desc: 'Nyxara speaks with the voice of the void. Take her rune.', gold: 25000, xp: 45000, pts: 200 },
+    { rank: 'SSSS', type: 'boss', mob: 'demon_king', name: 'THE DEMON KING', desc: 'Malzevoth, King of all Demons, holds the Master Rune. The hardest fight in Eldoria. Bring an army — or become one.', gold: 60000, xp: 120000, pts: 400 },
   ];
 
   // ---------------- story chapters ----------------
@@ -291,7 +363,9 @@
     { id: 10, title: 'Breaking the Line', type: 'kill', mob: 'demon_soldier', n: 10, text: 'Join the battle at the war front in the Ashen Marches. Break the demon line — 10 soldiers.', reward: { gold: 5000, xp: 10000 } },
     { id: 11, title: 'The General', type: 'boss', mob: 'demon_general', text: 'General Vorgath commands the Rift. With him gone, Demonspire stands open.', reward: { gold: 8000, xp: 16000, item: 'elixir', itemN: 3 } },
     { id: 12, title: 'The Demon Lord', type: 'boss', mob: 'demon_lord', text: 'March on Demonspire Citadel. Face Azgareth. End the war.', reward: { gold: 30000, xp: 50000, item: 'hero_sword' } },
-    { id: 13, title: 'Dawn over Eldoria', type: 'done', text: 'The Demon Lord has fallen. Bards will sing of you, hero. (Story complete — the world is yours.)', reward: {} },
+    { id: 13, title: 'Whispers of a King', type: 'talk', npc: 'king', where: 'Aldenhaven', text: 'Azgareth is dust, yet the corruption does not fade. King Aldric has grim news: the Demon Lord served a greater master. Return to the capital.', reward: { gold: 5000, xp: 10000 } },
+    { id: 14, title: 'The King of Demons', type: 'boss', mob: 'demon_king', text: 'Beyond the Rift stands the Demon King\'s Citadel, crawling with demons and guarded by his four Generals. Face Malzevoth, the true King of Demons, and claim the Master Rune.', reward: { gold: 50000, xp: 100000, item: 'elixir', itemN: 5 } },
+    { id: 15, title: 'Dawn over Eldoria', type: 'done', text: 'The Demon King has fallen and his rune is yours. Bards will sing of you forever, hero. (Story complete — the world is yours.)', reward: {} },
   ];
 
   // ---------------- crafting ----------------
@@ -338,6 +412,33 @@
     armycaptain: { name: 'Captain Elric', portrait: { hair: 1, skin: 1, cls: 'tank' }, lines: ['The Royal Army pays steady coin for demon horns and holds the line at the Ashen Marches.', 'Enlist and fight beside us — or stay a free blade. Either way, demons don\'t care whose banner kills them.'] },
     merc_broker: { name: 'Sable the Broker', portrait: { hair: 1, skin: 2, cls: 'ranger' }, lines: ['Mercenary work: no banners, no salutes, just contracts and coin. War pay runs half again the army\'s rate.', 'Sign with me and every demon you drop at the front pays a premium.'] },
   };
+
+  // ---------------- generic drop pools (level-scaled monster loot) ----------------
+  DATA.DROP_POOLS = {};
+  for (const id in I) {
+    const it = I[id];
+    if (it.type === 'special' || it.type === 'tome' || it.type === 'rune') continue;
+    if (id === 'demon_heart' || id === 'merchant_permit' || id === 'escort_writ') continue;
+    (DATA.DROP_POOLS[it.rarity] = DATA.DROP_POOLS[it.rarity] || []).push(id);
+  }
+  // not guaranteed: weak monsters drop little and poor, strong monsters drop better
+  DATA.rollWorldDrop = function (lvl) {
+    if (Math.random() > 0.22 + Math.min(0.18, lvl * 0.004)) return null; // most kills drop nothing extra
+    const r = Math.random() * 100;
+    let rar = 'common';
+    if (lvl >= 35 && r < 0.6) rar = 'mythical';
+    else if (lvl >= 26 && r < 2.2) rar = 'legendary';
+    else if (lvl >= 18 && r < 6 + lvl * 0.12) rar = 'epic';
+    else if (lvl >= 10 && r < 15 + lvl * 0.35) rar = 'rare';
+    else if (lvl >= 4 && r < 42 + lvl * 0.6) rar = 'uncommon';
+    const pool = DATA.DROP_POOLS[rar];
+    if (!pool || !pool.length) return null;
+    return pool[(Math.random() * pool.length) | 0];
+  };
+
+  // cross-class spell training: anyone can learn other schools with enough levels + gold
+  DATA.trainReq = s => s.lvl + 8;
+  DATA.trainCost = s => 200 + s.lvl * 120;
 
   // ---------------- misc ----------------
   DATA.xpForLevel = lvl => Math.floor(24 * Math.pow(lvl, 1.65));

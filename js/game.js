@@ -45,6 +45,7 @@
       story: 0, jobs: [], guildPts: 0, rank: 0,
       faction: null, permit: false,
       kills: {}, opened: {}, deaths: 0, bossKills: {},
+      pvpWins: 0, customSpells: [],
       created: Date.now(),
     });
     // starter gear
@@ -62,10 +63,25 @@
     }
   }
   GAME.learnSpell = function (id) { if (!P.spells.includes(id)) { P.spells.push(id); autoHotbar(); } };
+  // cross-class training: any class can study another school's magic/skills
+  // with enough levels and gold — a swordsman CAN become a spellblade.
+  GAME.trainSpell = function (id) {
+    const s = D().SPELLS[id];
+    if (!s || P.spells.includes(id)) return;
+    if (s.tome) { UI.toast('That technique can only be learned from its tome.', '#ff9a8a'); return; }
+    const req = D().trainReq(s), cost = D().trainCost(s);
+    if (P.level < req) { UI.toast('Requires level ' + req + ' to train.', '#ff9a8a'); return; }
+    if (P.gold < cost) { UI.toast('Training costs ' + cost + 'g.', '#ff9a8a'); return; }
+    P.gold -= cost;
+    P.spells.push(id);
+    AUDIO.sfx('levelup');
+    UI.toast('Trained: ' + s.name + '! (' + cost + 'g)', '#8fd4ff');
+    UI.refreshHud(); GAME.save();
+  };
   function autoHotbar() {
     const wanted = [];
-    for (const id of P.spells) wanted.push({ t: 'spell', id });
-    wanted.sort((a, b) => D().SPELLS[a.id].lvl - D().SPELLS[b.id].lvl);
+    for (const id of P.spells) { if (GAME.getSpell(id)) wanted.push({ t: 'spell', id }); }
+    wanted.sort((a, b) => GAME.getSpell(a.id).lvl - GAME.getSpell(b.id).lvl);
     for (let i = 0; i < 6 && i < wanted.length; i++) if (!P.hotbar[i]) P.hotbar[i] = wanted[i];
     // potions on last slots
     if (!P.hotbar[6] && findInv('potion_s') >= 0) P.hotbar[6] = { t: 'item', id: 'potion_s' };
@@ -183,6 +199,10 @@
       s.n--; if (s.n <= 0) P.inv[slot] = null;
       AUDIO.sfx('levelup'); UI.toast('Learned: ' + sp.name + '!', '#8fd4ff');
       UI.refreshInv();
+    } else if (def.type === 'rune') {
+      if (s.id === 'rune_master') UI.openRunecraft();
+      else if (GAME.countItem('rune_master') > 0) UI.openRunecraft();
+      else UI.toast('Only the Master Rune of the Demon King can bind this power.', '#c88ae8');
     } else if (def.type === 'weapon' || def.type === 'shield' || def.type === 'helmet' || def.type === 'armor' || def.type === 'boots' || def.type === 'ring' || def.type === 'amulet') {
       GAME.equipFromInv(slot);
     } else if (s.id === 'merchant_permit') {
@@ -364,10 +384,31 @@
     }
     mobs = []; projectiles = []; grounds = []; corpses = [];
     bossActive = null;
+    UI.hideBossBar();
     // populate zones
     for (const z of map.mobZones) { z.pop = 0; z.timer = 0; }
     // boss
     if (map.bossSpawn && !map.bossDead) spawnBoss();
+    // the Demon King's generals hold their rooms until each is slain this run
+    if (map.generalSpawns) {
+      map.generalsDead = map.generalsDead || {};
+      for (const gs of map.generalSpawns) {
+        if (!map.generalsDead[gs.mob]) {
+          const g = spawnMob(gs.mob, gs.x, gs.y, null);
+          if (g) g.isGeneral = true;
+        }
+      }
+    }
+    // roaming dragon world bosses
+    if (map.worldBosses) {
+      map.worldBossDead = map.worldBossDead || {};
+      for (const wb of map.worldBosses) {
+        if (!map.worldBossDead[wb.id]) {
+          const b = spawnMob(wb.id, wb.x, wb.y, null);
+          if (b) b.isWorldBoss = true;
+        }
+      }
+    }
     AUDIO.playMusic(map.music);
     UI.setMapLabel(map.name);
     if (window.NET) NET.mapChanged(id);
@@ -464,23 +505,33 @@
     if (fx === 'slow') mb.slow = Math.max(mb.slow, 2.5);
     if (fx === 'holy' && mb.def.undead) mb.hp -= dmg; // double vs undead
     AUDIO.sfx('hit');
-    if (mb.hp <= 0) killMob(mb);
+    if (mb.hp <= 0) killMob(mb, true);
+  }
+  // only play a sound if the event happens near the player (the war front
+  // rages on across the map — it shouldn't blast audio from miles away)
+  function sfxNear(x, y, name) {
+    if (Math.hypot(x - P.x, y - P.y) < 380) AUDIO.sfx(name);
   }
   GAME.hurtMob = hurtMob;
   function addDot(mb, kind, dur, dps) {
     const e = mb.dots.find(d => d.kind === kind);
     if (e) { e.t = dur; } else mb.dots.push({ kind, t: dur, dps });
   }
-  function killMob(mb) {
+  function killMob(mb, byPlayer) {
     mb.hp = 0;
     mobs = mobs.filter(m => m !== mb);
     if (mb.zone) mb.zone.pop--;
     corpses.push({ x: mb.x, y: mb.y, t: 0.5, sprite: mb.id });
     burst(mb.x, mb.y, mb.def.boss ? '#f2c14b' : '#c8402e', mb.def.boss ? 30 : 8);
-    AUDIO.sfx('mobdie');
+    sfxNear(mb.x, mb.y, 'mobdie');
     if (mb.friendly) return; // soldiers give nothing
-    // rewards
     const def = mb.def;
+    if (mb.isWorldBoss) { map.worldBossDead = map.worldBossDead || {}; map.worldBossDead[mb.id] = true; }
+    if (mb.isGeneral) { map.generalsDead = map.generalsDead || {}; map.generalsDead[mb.id] = true; }
+    if (mb === bossActive) { bossActive = null; UI.hideBossBar(); AUDIO.playMusic(map.music); }
+    // NPC soldiers finishing demons at the front give the player nothing —
+    // XP, gold, drops and quest credit only for the player's own kills
+    if (!byPlayer) return;
     let goldGain = def.gold[0] + Math.random() * (def.gold[1] - def.gold[0]) | 0;
     if (mb.warMob || (map.warzone && W().inWarzone(map, mb.x, mb.y))) {
       if (P.faction === 'mercenary' && def.demon) goldGain = Math.floor(goldGain * 1.5);
@@ -490,13 +541,21 @@
     float(mb.x, mb.y - 8, '+' + goldGain + 'g', '#f2c14b');
     P.kills[mb.id] = (P.kills[mb.id] || 0) + 1;
     questProgress('kill', mb.id, 1);
-    // drops
+    // specific drops
     for (const dr of def.drops || []) {
       if (Math.random() < dr.c) GAME.addItem(dr.i, dr.n || 1);
     }
+    // generic level-scaled drop: never guaranteed, weak mobs give poor loot
+    if (!def.boss) {
+      const extra = D().rollWorldDrop(def.lvl);
+      if (extra) {
+        GAME.addItem(extra, 1);
+        const edef = D().ITEMS[extra];
+        if (edef.rarity !== 'common' && edef.rarity !== 'uncommon') UI.toast('Rare drop: ' + edef.name + '!', D().RARITY[edef.rarity].color);
+      }
+    }
     if (def.boss) {
-      map.bossDead = true;
-      bossActive = null;
+      if (mb.isMapBoss) map.bossDead = true;
       P.bossKills[mb.id] = (P.bossKills[mb.id] || 0) + 1;
       UI.announce(def.name + ' DEFEATED!', 'Legendary loot acquired');
       UI.hideBossBar();
@@ -507,9 +566,12 @@
       for (const l of loot) GAME.addItem(l.id, l.n);
       if (window.NET) NET.chatSystem('⚔ ' + P.name + ' has slain ' + def.name + '!');
       if (mb.id === 'demon_lord') {
-        const st = D().STORY[P.story];
-        setTimeout(() => UI.announce('THE WAR IS OVER', 'Eldoria is free. You are its hero.'), 3500);
+        setTimeout(() => UI.announce('THE WAR IS OVER', 'Yet the corruption lingers... speak with the King.'), 3500);
       }
+      if (mb.id === 'demon_king') {
+        setTimeout(() => UI.announce('THE DEMON KING IS DEAD', 'The Master Rune is yours — use it to forge your own magic!'), 3500);
+      }
+      GAME.save();
     }
   }
 
@@ -655,21 +717,69 @@
       }
     }
   }
+  // ---------------- PvP: arena + open-world duels ----------------
+  let duel = null;        // active duel {id, name, t}
+  let duelInvite = null;  // incoming challenge {from, name, t}
+  function canPvpHit(rp) {
+    if (rp.map !== P.map) return false;
+    if (duel && rp.id === duel.id) return true;
+    if (map.arena && W().inArena(map, P.x, P.y) && W().inArena(map, rp.x, rp.y)) return true;
+    return false;
+  }
   function hitArenaOpponents(cx, cy, r, dmg) {
-    if (!window.NET || !map.arena) return;
-    if (!W().inArena(map, P.x, P.y)) return;
+    if (!window.NET) return;
     NET.remoteList().forEach(rp => {
-      if (rp.map !== P.map) return;
-      if (!W().inArena(map, rp.x, rp.y)) return;
+      if (!canPvpHit(rp)) return;
       if (Math.hypot(rp.x - cx, rp.y - cy) < r + 12) {
         NET.sendPvpHit(rp.id, dmg);
-        float(rp.x, rp.y - 26, dmg, '#ffdf5e');
+        float(rp.x, rp.y - 26, Math.round(dmg), '#ffdf5e');
         AUDIO.sfx('pvp');
       }
     });
   }
-  GAME.receivePvpHit = function (dmg, fromName) {
-    if (!map || !W().inArena(map, P.x, P.y)) return; // only valid in arena
+  GAME.tryDuel = function () {
+    if (!window.NET || !NET.online()) { UI.toast('Duels need an online connection.', '#ff9a8a'); return; }
+    if (duelInvite) { // accept pending challenge
+      const inv = duelInvite; duelInvite = null;
+      duel = { id: inv.from, name: inv.name, t: 120 };
+      NET.sendDuelAccept(inv.from);
+      UI.announce('DUEL!', 'vs ' + inv.name + ' — fight!');
+      AUDIO.sfx('pvp');
+      return;
+    }
+    if (duel) { UI.toast('Already dueling ' + duel.name + '!', '#ff9a8a'); return; }
+    let best = null, bd = 90;
+    NET.remoteList().forEach(rp => {
+      if (rp.map !== P.map) return;
+      const d = Math.hypot(rp.x - P.x, rp.y - P.y);
+      if (d < bd) { bd = d; best = rp; }
+    });
+    if (!best) { UI.toast('Stand near another adventurer and press P to challenge them.', '#8fd4ff'); return; }
+    NET.sendDuelReq(best.id);
+    UI.toast('⚔ Challenge sent to ' + best.name + '!', '#ffdf8e');
+  };
+  GAME.duelRequested = function (fromId, name) {
+    duelInvite = { from: fromId, name, t: 12 };
+    UI.toast('⚔ ' + name + ' challenges you to a duel! Press P to accept (12s)', '#ffdf8e');
+    AUDIO.sfx('pvp');
+  };
+  GAME.duelAccepted = function (fromId, name) {
+    duel = { id: fromId, name, t: 120 };
+    UI.announce('DUEL!', 'vs ' + name + ' — fight!');
+    AUDIO.sfx('pvp');
+  };
+  GAME.duelWon = function () {
+    P.pvpWins = (P.pvpWins || 0) + 1;
+    duel = null;
+    UI.announce('VICTORY!', 'PvP wins: ' + P.pvpWins);
+    AUDIO.sfx('levelup');
+    GAME.save();
+  };
+  GAME.receivePvpHit = function (dmg, fromName, fromId) {
+    if (!map) return;
+    const inArena = W().inArena(map, P.x, P.y);
+    const inDuel = duel && duel.id === fromId;
+    if (!inArena && !inDuel) return; // no ganking outside consensual pvp
     const real = Math.max(1, Math.floor(dmg * 100 / (100 + P.def * 5)));
     P.hp -= real;
     P.hurtT = 0.25;
@@ -678,17 +788,59 @@
     if (P.hp <= 1) {
       P.hp = 1;
       UI.announce('DEFEATED!', fromName + ' wins the duel');
-      if (window.NET) NET.chatSystem('🏆 ' + fromName + ' defeated ' + P.name + ' in the arena!');
-      // step out of arena
-      P.x = (map.arena.x + map.arena.w / 2) * TS; P.y = (map.arena.y + map.arena.h + 1.5) * TS;
+      if (window.NET) {
+        NET.sendPvpWin(fromId);
+        NET.chatSystem('🏆 ' + fromName + ' defeated ' + P.name + (inDuel ? ' in a duel!' : ' in the arena!'));
+      }
+      if (inArena && map.arena) { P.x = (map.arena.x + map.arena.w / 2) * TS; P.y = (map.arena.y + map.arena.h + 1.5) * TS; }
+      duel = null;
     }
     UI.refreshHud();
   };
 
   const spellCds = {};
   GAME.spellCd = id => spellCds[id] || 0;
+  // resolves both built-in spells and rune-forged custom spells
+  GAME.getSpell = function (id) {
+    return D().SPELLS[id] || (P.customSpells || []).find(s => s.id === id) || null;
+  };
+  // Runeforge: build a fully custom spell from an element rune + a form rune.
+  // Power scales with the caster's level at forge time; INT scales it at cast time.
+  const RUNE_ELEMENTS = {
+    fire: { color: '#f08040', fx: 'burn', icon: 'fire' },
+    frost: { color: '#8cd4f0', fx: 'slow', icon: 'ice' },
+    storm: { color: '#f2d34b', fx: null, icon: 'bolt' },
+    void: { color: '#b45fe0', fx: 'poison', icon: 'dark' },
+    dawn: { color: '#ffdf8e', fx: 'holy', icon: 'holy' },
+  };
+  GAME.craftRuneSpell = function (element, form, name) {
+    if (GAME.countItem('rune_master') < 1) { UI.toast('You need the Master Rune to forge spells.', '#ff9a8a'); return false; }
+    const elItem = 'rune_' + element, formItem = { arrow: 'rune_arrow', ring: 'rune_ring', tempest: 'rune_tempest' }[form];
+    if (GAME.countItem(elItem) < 1 || GAME.countItem(formItem) < 1) { UI.toast('Missing runes for that combination.', '#ff9a8a'); return false; }
+    const el = RUNE_ELEMENTS[element];
+    if (!el || !formItem) return false;
+    const L = P.level;
+    const base = {
+      id: 'cs_' + Date.now().toString(36), custom: true, cls: 'all',
+      name: (name || 'Runic ' + element).slice(0, 22), lvl: 1,
+      icon: el.icon, color: el.color, fx: el.fx, scale: 1.5,
+    };
+    if (form === 'arrow') Object.assign(base, { type: 'proj', dmg: Math.round(26 + L * 2.2), speed: 320, aoe: element === 'fire' ? 26 : 0, mp: Math.round(14 + L * 0.35), cd: 2.5, desc: 'A rune-forged bolt of ' + element + '. Forged at level ' + L + '.' });
+    else if (form === 'ring') Object.assign(base, { type: 'nova', dmg: Math.round(22 + L * 1.9), radius: 60 + Math.min(30, L), mp: Math.round(18 + L * 0.45), cd: 5.5, desc: 'A rune-forged burst of ' + element + '. Forged at level ' + L + '.' });
+    else Object.assign(base, { type: 'ground', dmg: Math.round(15 + L * 1.4), radius: 68, dur: 3.5, mp: Math.round(24 + L * 0.55), cd: 8, desc: 'A rune-forged tempest of ' + element + '. Forged at level ' + L + '.' });
+    GAME.removeItem(elItem, 1); GAME.removeItem(formItem, 1);
+    P.customSpells = P.customSpells || [];
+    P.customSpells.push(base);
+    P.spells.push(base.id);
+    const free = P.hotbar.findIndex(h => !h);
+    if (free >= 0) P.hotbar[free] = { t: 'spell', id: base.id };
+    AUDIO.sfx('levelup');
+    UI.announce('SPELL FORGED!', base.name + ' — your own magic, written in runes');
+    UI.refreshHotbar(); GAME.save();
+    return true;
+  };
   GAME.castSpell = function (id) {
-    const s = D().SPELLS[id];
+    const s = GAME.getSpell(id);
     if (!s || !P.spells.includes(id)) return;
     if ((spellCds[id] || 0) > 0) return;
     if (P.mp < s.mp) { UI.toast('Not enough mana.', '#8fb0ff'); AUDIO.sfx('error'); return; }
@@ -972,6 +1124,11 @@
     if (it.kind === 'market') { UI.openMarket(); return; }
     if (it.kind === 'exit') {
       const ex = it.ex;
+      if (ex.requires && !P.bossKills[ex.requires]) {
+        UI.toast('A dark seal bars the way. Only those who defeated ' + D().MOBS[ex.requires].name + ' may enter.', '#c88ae8');
+        AUDIO.sfx('error');
+        return;
+      }
       GAME.enterMap(ex.to, ex.tx, ex.ty);
       return;
     }
@@ -989,8 +1146,8 @@
   // ============================================================
   function update(dt) {
     frameT += dt;
-    // world clock: 1 game minute per real second (24h day = 24 min)
-    GAME.time += dt * 60 * 1;
+    // world clock: one in-game day = ~40 real minutes
+    GAME.time += dt * 0.6;
     if (GAME.time >= 1440) { GAME.time -= 1440; GAME.day++; }
     // cooldowns
     atkCd = Math.max(0, atkCd - dt);
@@ -999,6 +1156,9 @@
     if (P.hurtT) P.hurtT = Math.max(0, P.hurtT - dt);
     saveTimer += dt;
     if (saveTimer > 12) { saveTimer = 0; GAME.save(); }
+    // duel timers
+    if (duelInvite) { duelInvite.t -= dt; if (duelInvite.t <= 0) duelInvite = null; }
+    if (duel) { duel.t -= dt; if (duel.t <= 0) { UI.toast('The duel with ' + duel.name + ' ends in a draw.', '#8fd4ff'); duel = null; } }
 
     // buffs
     let buffsChanged = false;
@@ -1111,7 +1271,7 @@
         if (Math.random() < dt * 4) particles.push({ x: mb.x + Math.random() * 10 - 5, y: mb.y - 10, vx: 0, vy: -20, t: 0.3, color: d.kind === 'burn' ? '#f08040' : '#7ab02a', size: 2 });
       }
       mb.dots = mb.dots.filter(d => d.t > 0);
-      if (mb.hp <= 0) { killMob(mb); continue; }
+      if (mb.hp <= 0) { killMob(mb, true); continue; }
 
       const def = mb.def;
       let speed = def.speed * (mb.slow > 0 ? 0.5 : 1);
@@ -1152,7 +1312,7 @@
           } else if (!def.ranged && dist < 20) {
             mb.cd = def.atkCd;
             if (tgtIsPlayer) hurtPlayer(def.atk * (0.85 + Math.random() * 0.3), mb.x, mb.y, def.fx);
-            else { tgt.hp -= def.atk; if (tgt !== escort) { tgt.flash = 0.1; if (tgt.hp <= 0) killMob(tgt); } else { float(escort.x, escort.y - 24, '-' + def.atk, '#ff6a5a'); if (escort.hp <= 0) failEscort(); } }
+            else { tgt.hp -= def.atk; if (tgt !== escort) { tgt.flash = 0.1; if (tgt.hp <= 0) killMob(tgt, false); } else { float(escort.x, escort.y - 24, '-' + def.atk, '#ff6a5a'); if (escort.hp <= 0) failEscort(); } }
           }
         }
         // bosses
@@ -1175,8 +1335,8 @@
         }
       }
       if (mb.tauntT) mb.tauntT = Math.max(0, mb.tauntT - dt);
-      // boss bar
-      if (mb.isMapBoss && mb.state === 'chase' && !bossActive) {
+      // boss bar (dungeon bosses, generals and roaming dragons alike)
+      if (mb.def.boss && mb.state === 'chase' && !bossActive) {
         bossActive = mb;
         UI.showBossBar(def.name);
         AUDIO.playMusic('boss');
@@ -1315,10 +1475,10 @@
             break;
           }
         }
-        // arena pvp projectiles
-        if (pr.life > 0 && window.NET && map.arena && W().inArena(map, P.x, P.y)) {
+        // pvp projectiles (arena or active duel)
+        if (pr.life > 0 && window.NET) {
           NET.remoteList().forEach(rp => {
-            if (rp.map !== P.map || !W().inArena(map, rp.x, rp.y)) return;
+            if (!canPvpHit(rp)) return;
             if (Math.hypot(rp.x - pr.x, rp.y - 12 - pr.y) < 14) { NET.sendPvpHit(rp.id, pr.dmg); pr.life = 0; AUDIO.sfx('pvp'); }
           });
         }
@@ -1330,7 +1490,7 @@
         if (pr.targetEnt && pr.targetEnt.hp > 0) {
           if (Math.hypot(pr.targetEnt.x - pr.x, pr.targetEnt.y - 8 - pr.y) < 12) {
             pr.targetEnt.hp -= pr.dmg;
-            if (pr.targetEnt.hp <= 0 && pr.targetEnt !== escort) killMob(pr.targetEnt);
+            if (pr.targetEnt.hp <= 0 && pr.targetEnt !== escort) killMob(pr.targetEnt, false);
             pr.life = 0;
           }
         }
@@ -1450,6 +1610,7 @@
     drawLighting(w, h);
   }
 
+  const CANOPY = { tree: 1, pine: 1, palm: 1, deadtree: 1 };
   function drawObject(o) {
     const img = PXA.props[o.type] || PXA.props.rock;
     const ox = o.x * TS + TS / 2 - img.width / 2;
@@ -1457,7 +1618,12 @@
     // shadow
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.fillRect(o.x * TS + 2, o.y * TS + TS - 3, TS - 4, 3);
+    // fade canopies that would hide the player standing behind them
+    const base = o.y * TS + TS;
+    const hides = CANOPY[o.type] && base > P.y && base - P.y < 30 && Math.abs(o.x * TS + 8 - P.x) < 16;
+    if (hides) ctx.globalAlpha = 0.55;
     ctx.drawImage(img, Math.round(ox), Math.round(oy));
+    if (hides) ctx.globalAlpha = 1;
   }
   function shadow(x, y, w2) {
     ctx.fillStyle = 'rgba(0,0,0,.28)';
@@ -1466,8 +1632,9 @@
   function heroFrame(sheet, dir, animT, moving) {
     const frames = sheet[dir] || sheet.down;
     if (!moving) return frames[0];
-    const f = (animT * 7 | 0) % 2;
-    return frames[1 + f];
+    // classic 4-step cycle: stride A → stand → stride B → stand
+    const step = (animT * 9 | 0) % 4;
+    return frames[[1, 0, 2, 0][step]];
   }
   function drawPlayer() {
     if (!heroSheet) return;
@@ -1665,6 +1832,7 @@
       map: P.map, x: P.x, y: P.y, spawn: P.spawn,
       story: P.story, storyProg: P.storyProg || 0, jobs: P.jobs, guildPts: P.guildPts, rank: P.rank,
       faction: P.faction, permit: P.permit, kills: P.kills, deaths: P.deaths, bossKills: P.bossKills,
+      pvpWins: P.pvpWins || 0, customSpells: P.customSpells || [],
       day: GAME.day, time: GAME.time,
     };
   };
@@ -1676,6 +1844,7 @@
       map: d.map, x: d.x, y: d.y, spawn: d.spawn,
       story: d.story, storyProg: d.storyProg, jobs: d.jobs || [], guildPts: d.guildPts || 0, rank: d.rank || 0,
       faction: d.faction, permit: d.permit, kills: d.kills || {}, deaths: d.deaths || 0, bossKills: d.bossKills || {},
+      pvpWins: d.pvpWins || 0, customSpells: d.customSpells || [],
       buffs: [], effects: {},
     });
     GAME.day = d.day || 1; GAME.time = d.time || 480;
@@ -1718,6 +1887,8 @@
       if (k === 'q' || k === 'j') UI.toggle('win-quests');
       if (k === 'm') UI.toggle('win-map');
       if (k === 'o') UI.toggle('win-social');
+      if (k === 'l') UI.openLeaderboard();
+      if (k === 'p' && running) GAME.tryDuel();
       if (k === 'escape') UI.closeAll();
       if (k === 'enter') UI.focusChat();
     });

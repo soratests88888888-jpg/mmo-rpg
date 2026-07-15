@@ -82,7 +82,16 @@
       if (payload && payload.text) UI.addChat(null, payload.text, 'sys');
     });
     channel.on('broadcast', { event: 'pvp' }, ({ payload }) => {
-      if (payload && payload.to === myId) GAME.receivePvpHit(payload.dmg, payload.from);
+      if (payload && payload.to === myId) GAME.receivePvpHit(payload.dmg, payload.from, payload.fromId);
+    });
+    channel.on('broadcast', { event: 'duel_req' }, ({ payload }) => {
+      if (payload && payload.to === myId) GAME.duelRequested(payload.fromId, payload.from);
+    });
+    channel.on('broadcast', { event: 'duel_acc' }, ({ payload }) => {
+      if (payload && payload.to === myId) GAME.duelAccepted(payload.fromId, payload.from);
+    });
+    channel.on('broadcast', { event: 'pvp_win' }, ({ payload }) => {
+      if (payload && payload.to === myId) GAME.duelWon();
     });
     channel.on('broadcast', { event: 'sold' }, ({ payload }) => {
       if (payload && payload.seller === myId) {
@@ -108,11 +117,15 @@
   }
 
   // -------- position sync --------
+  // A standing player must still broadcast a heartbeat: otherwise other
+  // clients never learn about them (or prune them as "gone") — that was
+  // the "players randomly disappear / can't see each other" bug.
+  let lastSendTime = 0;
   NET.tick = function (dt) {
     // interpolate remotes
     const now = Date.now();
     for (const [id, rp] of remotes) {
-      if (now - (rp.lastSeen || 0) > 12000) { remotes.delete(id); continue; }
+      if (now - (rp.lastSeen || 0) > 30000) { remotes.delete(id); continue; }
       if (rp.tx != null) {
         const k = Math.min(1, dt * 10);
         rp.x += (rp.tx - rp.x) * k;
@@ -125,8 +138,11 @@
       posTimer = 0.12;
       const p = GAME.player;
       const st = { x: Math.round(p.x), y: Math.round(p.y), d: p.dir, m: !!p.moving, mp: p.map };
-      if (st.x !== lastSent.x || st.y !== lastSent.y || st.m !== lastSent.m || st.mp !== lastSent.mp) {
+      const changed = st.x !== lastSent.x || st.y !== lastSent.y || st.m !== lastSent.m || st.mp !== lastSent.mp;
+      const keepalive = now - lastSendTime > 2000;
+      if (changed || keepalive) {
         lastSent = st;
+        lastSendTime = now;
         channel.send({
           type: 'broadcast', event: 'pos',
           payload: Object.assign({ id: myId, n: p.name, l: p.level, c: p.cls, lk: p.look }, st),
@@ -158,10 +174,31 @@
     } catch (e) { }
   }
 
-  // -------- pvp --------
+  // -------- pvp / duels --------
   NET.sendPvpHit = function (toId, dmg) {
     if (!isOnline) return;
-    channel.send({ type: 'broadcast', event: 'pvp', payload: { to: toId, from: GAME.player.name, dmg: Math.round(dmg) } }).catch(() => { });
+    channel.send({ type: 'broadcast', event: 'pvp', payload: { to: toId, fromId: myId, from: GAME.player.name, dmg: Math.round(dmg) } }).catch(() => { });
+  };
+  NET.sendDuelReq = function (toId) {
+    if (!isOnline) return;
+    channel.send({ type: 'broadcast', event: 'duel_req', payload: { to: toId, fromId: myId, from: GAME.player.name } }).catch(() => { });
+  };
+  NET.sendDuelAccept = function (toId) {
+    if (!isOnline) return;
+    channel.send({ type: 'broadcast', event: 'duel_acc', payload: { to: toId, fromId: myId, from: GAME.player.name } }).catch(() => { });
+  };
+  NET.sendPvpWin = function (toId) {
+    if (!isOnline) return;
+    channel.send({ type: 'broadcast', event: 'pvp_win', payload: { to: toId } }).catch(() => { });
+  };
+
+  // -------- leaderboard --------
+  NET.fetchLeaderboard = async function (col) {
+    if (!sb) return [];
+    try {
+      const { data } = await sb.from('leaderboard').select('*').order(col, { ascending: false }).limit(20);
+      return data || [];
+    } catch (e) { return []; }
   };
 
   // -------- persistence --------
