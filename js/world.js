@@ -381,7 +381,7 @@
     addDoorAction(m, d, { kind: 'shop', shop: 'ember_black' });
     house(m, X + 18, Y + 1, 5, 6, TID.roofR);
     addObj(m, 'well', X + 12, Y + 10, true);
-    npc(m, 'em_v1', 'Trader Nadia', X + 16, Y + 10, { hair: 1, skin: 2, cls: 'ranger', armorColor: '#d8a83a', armorDark: '#a07820' }, { wander: 30, chat: ['The Molten Depths glow at night. Bad omen.', 'Sand gets everywhere. EVERYWHERE.'] });
+    npc(m, 'em_v1', 'Trader Nadia', X + 16, Y + 10, { hair: 1, skin: 2, cls: 'ranger', armorColor: '#d8a83a', armorDark: '#a07820' }, { wander: 30, deliverTarget: 'emberport', chat: ['The Molten Depths glow at night. Bad omen.', 'Sand gets everywhere. EVERYWHERE.'] });
     m.safeZones.push({ x: X - 2, y: Y - 2, w: 26, h: 18, name: 'Emberport', spawn: { x: (X + 12) * 16, y: (Y + 9) * 16 } });
     WORLD.locations.push({ name: 'Emberport', x: X + 12, y: Y + 8, kind: 'town' });
   }
@@ -395,7 +395,7 @@
     addDoorAction(m, d, { kind: 'shop', shop: 'frost_black' });
     house(m, X + 18, Y + 1, 5, 6, TID.roofR);
     addObj(m, 'campfire', X + 12, Y + 10, false, { craft: true });
-    npc(m, 'fr_v1', 'Hunter Skald', X + 16, Y + 10, { hair: 3, skin: 0, cls: 'ranger', armorColor: '#5c7a8c', armorDark: '#3a5060' }, { wander: 30, chat: ['Yetis took the pass. Again.', 'The Frozen Abyss? Even my dogs won\'t go near it.'] });
+    npc(m, 'fr_v1', 'Hunter Skald', X + 16, Y + 10, { hair: 3, skin: 0, cls: 'ranger', armorColor: '#5c7a8c', armorDark: '#3a5060' }, { wander: 30, deliverTarget: 'frosthold', chat: ['Yetis took the pass. Again.', 'The Frozen Abyss? Even my dogs won\'t go near it.'] });
     m.safeZones.push({ x: X - 2, y: Y - 2, w: 26, h: 18, name: 'Frosthold', spawn: { x: (X + 12) * 16, y: (Y + 9) * 16 } });
     WORLD.locations.push({ name: 'Frosthold', x: X + 12, y: Y + 8, kind: 'town' });
   }
@@ -429,6 +429,35 @@
     m.exits.push({ x: X + 8, y: Y + 4, w: 2, h: 2, to: 'demoncastle', useSpawn: true });
     WORLD.locations.push({ name: 'Demonspire Citadel', x: X + 9, y: Y + 6, kind: 'demon' });
   }
+  // the Demon King's Citadel — sealed until Azgareth falls
+  function buildDemonKingGate(m) {
+    const X = 268, Y = 18;
+    clearArea(m, X - 2, Y - 2, 20, 16, TID.ashes);
+    rect(m, X, Y, 16, 10, TID.demonwall);
+    rect(m, X + 2, Y + 2, 12, 7, TID.demonfloor);
+    rect(m, X + 7, Y + 9, 2, 1, TID.demonfloor);
+    addObj(m, 'bannerdemon', X + 3, Y + 3, false); addObj(m, 'bannerdemon', X + 12, Y + 3, false);
+    addObj(m, 'bannerdemon', X + 3, Y + 7, false); addObj(m, 'bannerdemon', X + 12, Y + 7, false);
+    addObj(m, 'portal', X + 7, Y + 4, false);
+    m.exits.push({ x: X + 7, y: Y + 4, w: 2, h: 2, to: 'demonking', useSpawn: true, requires: 'demon_lord' });
+    addObj(m, 'sign', X + 8, Y + 10, false, { signText: 'THE DEMON KING\'S CITADEL — only those who felled Azgareth may pass the seal.' });
+    WORLD.locations.push({ name: 'Demon King\'s Citadel', x: X + 8, y: Y + 5, kind: 'demon' });
+  }
+  // roaming dragon world bosses nest at fixed lairs
+  function buildDragonNests(m) {
+    m.worldBosses = [
+      { id: 'emerald_wyrm', x: 112 * 16, y: 214 * 16 },
+      { id: 'frost_wyrm', x: 198 * 16, y: 34 * 16 },
+      { id: 'void_dragon', x: 262 * 16, y: 72 * 16 },
+    ];
+    for (const wb of m.worldBosses) {
+      const tx = wb.x / 16 | 0, ty = wb.y / 16 | 0;
+      clearArea(m, tx - 3, ty - 3, 7, 7, getT(m, tx - 4, ty - 4) === TID.snow ? TID.snow : (getT(m, tx - 4, ty - 4) === TID.corrupt || getT(m, tx - 4, ty - 4) === TID.ashes ? TID.ashes : TID.dirt));
+      addObj(m, 'bones', tx - 2, ty - 2, false); addObj(m, 'bones', tx + 2, ty + 1, false);
+      addObj(m, 'bones', tx + 1, ty - 2, false);
+      WORLD.locations.push({ name: DATA.MOBS[wb.id].name + '\'s Lair', x: tx, y: ty, kind: 'dungeon' });
+    }
+  }
 
   // ---------------- mob zones on the overworld ----------------
   function overworldZones(m) {
@@ -460,6 +489,7 @@
     demonrift: { name: 'Demon Rift', floor: 'demonfloor', wall: 'demonwall', size: 58, mobs: ['demon_soldier', 'dark_knight', 'demon_brute'], boss: 'demon_general', chestTier: 5, music: 'demon', dark: true, lvl: 'S–SSS' },
     dragonperch: { name: 'Dragon\'s Perch', floor: 'cavefloor', wall: 'cavewall', size: 48, mobs: ['drake', 'harpy', 'golem'], boss: 'ancient_dragon', chestTier: 6, music: 'boss', dark: true, lvl: 'SSS' },
     demoncastle: { name: 'Demonspire Throne', floor: 'demonfloor', wall: 'demonwall', size: 60, mobs: ['demon_soldier', 'demon_brute', 'lich'], boss: 'demon_lord', chestTier: 6, music: 'demon', dark: true, lvl: 'SSSS' },
+    demonking: { name: 'Demon King\'s Citadel', floor: 'demonfloor', wall: 'demonwall', size: 64, mobs: ['demon_guard', 'greater_demon', 'void_reaper'], boss: 'demon_king', generals: ['gen_ignaroth', 'gen_morgrim', 'gen_voltrag', 'gen_nyxara'], chestTier: 6, music: 'demon', dark: true, lvl: 'BEYOND SSSS' },
   };
 
   function genDungeon(id) {
@@ -493,6 +523,15 @@
     m.exits.push({ x: ent.cx - 1, y: ent.cy - 2, w: 3, h: 2, to: 'overworld', backRef: id });
     // boss room decor + spawn
     m.bossSpawn = { x: boss.cx * 16, y: boss.cy * 16, mob: def.boss };
+    // generals guard the rooms before the throne (Demon King's Citadel)
+    if (def.generals) {
+      m.generalSpawns = [];
+      def.generals.forEach((g, i) => {
+        const rm = rooms[Math.max(1, rooms.length - 2 - i)];
+        m.generalSpawns.push({ x: rm.cx * 16, y: rm.cy * 16, mob: g });
+        addObj(m, 'bannerdemon', rm.x + 1, rm.y + 1, false);
+      });
+    }
     addObj(m, 'bones', boss.x + 1, boss.y + 1, false);
     addObj(m, 'bones', boss.x + boss.w - 2, boss.y + boss.h - 2, false);
     // torches, chests, mobs in middle rooms
@@ -527,6 +566,8 @@
     buildFrosthold(m);
     buildWarfront(m);
     buildDemonspire(m);
+    buildDemonKingGate(m);
+    buildDragonNests(m);
     // roads
     road(m, 70, 190, 118, 241);          // riverwood -> oakstead
     road(m, 86, 189, 186, 156);          // riverwood -> aldenhaven west gate

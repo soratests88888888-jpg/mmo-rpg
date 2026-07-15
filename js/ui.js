@@ -108,7 +108,11 @@
       if (!h) continue;
       const c = document.createElement('canvas'); c.width = 18; c.height = 18;
       const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
-      if (h.t === 'spell') g.drawImage(PXA.spellIcon(D().SPELLS[h.id].icon), 1, 1);
+      if (h.t === 'spell') {
+        const sp = GAME.getSpell(h.id);
+        if (!sp) { P().hotbar[i] = null; continue; }
+        g.drawImage(PXA.spellIcon(sp.icon), 1, 1);
+      }
       else {
         const def = D().ITEMS[h.id];
         g.drawImage(PXA.icon(def.icon, def.iconPal), 0, 0);
@@ -125,15 +129,16 @@
       const h = P().hotbar[i];
       const cd = hb.children[i].querySelector('.cd');
       if (!cd) continue;
-      if (h && h.t === 'spell') {
-        const rem = GAME.spellCd(h.id), total = D().SPELLS[h.id].cd;
+      const sp = h && h.t === 'spell' ? GAME.getSpell(h.id) : null;
+      if (sp) {
+        const rem = GAME.spellCd(h.id), total = sp.cd;
         if (rem > 0.05) { cd.style.display = 'block'; cd.style.transform = 'scaleY(' + rem / total + ')'; }
         else cd.style.display = 'none';
       } else cd.style.display = 'none';
     }
   }
   function showHotbarTip(e, h) {
-    if (h.t === 'spell') showSpellTip(e, D().SPELLS[h.id]);
+    if (h.t === 'spell') { const sp = GAME.getSpell(h.id); if (sp) showSpellTip(e, sp); }
     else showItemTip(e, h.id);
   }
 
@@ -295,41 +300,78 @@
   };
 
   // ---------------- skills ----------------
+  function spellRow(s, known, extraBtn) {
+    const p = P();
+    const row = document.createElement('div');
+    row.className = 'spell-row' + (known ? '' : ' locked');
+    const ico = document.createElement('div'); ico.className = 's-ico';
+    const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+    c.getContext('2d').drawImage(PXA.spellIcon(s.icon), 0, 0);
+    ico.appendChild(c); row.appendChild(ico);
+    const mid = document.createElement('div');
+    mid.innerHTML = '<div class="s-name">' + s.name + (known ? '' : (s.tome ? ' — requires tome/manual' : ' — unlocks Lv' + s.lvl)) + '</div><div class="s-desc">' + s.desc + '</div>';
+    row.appendChild(mid);
+    const cost = document.createElement('div'); cost.className = 's-cost';
+    cost.innerHTML = s.mp + ' MP<br>' + s.cd + 's';
+    row.appendChild(cost);
+    if (extraBtn) row.appendChild(extraBtn);
+    if (known) {
+      row.style.cursor = 'pointer';
+      row.title = 'Click to add to hotbar';
+      row.onclick = () => {
+        const free = p.hotbar.findIndex(h => !h);
+        const already = p.hotbar.findIndex(h => h && h.t === 'spell' && h.id === s.id);
+        if (already >= 0) { UI.toast('Already on hotbar (' + (already + 1) + ')', '#8fd4ff'); return; }
+        if (free < 0) { UI.toast('Hotbar full — right-click a slot to clear it.', '#ff9a8a'); return; }
+        p.hotbar[free] = { t: 'spell', id: s.id };
+        UI.refreshHotbar();
+        UI.toast(s.name + ' → hotbar slot ' + (free + 1), '#8fd4ff');
+      };
+    }
+    row.onmouseenter = e => showSpellTip(e, s);
+    row.onmouseleave = hideTooltip;
+    return row;
+  }
+  function skillsHeader(text) {
+    const h = document.createElement('h4');
+    h.style.cssText = "font-family:'Press Start 2P';font-size:10px;color:#7c3a08;margin:10px 0 4px;";
+    h.textContent = text;
+    return h;
+  }
   UI.refreshSkills = function () {
     const p = P();
     const body = $('skills-body'); body.innerHTML = '';
-    const list = Object.values(D().SPELLS).filter(s => s.cls === p.cls || s.cls === 'all');
-    list.sort((a, b) => a.lvl - b.lvl);
-    for (const s of list) {
+    // your class
+    body.appendChild(skillsHeader('YOUR PATH — ' + D().CLASSES[p.cls].name.toUpperCase()));
+    const own = Object.values(D().SPELLS).filter(s => s.cls === p.cls || s.cls === 'all');
+    own.sort((a, b) => a.lvl - b.lvl);
+    for (const s of own) body.appendChild(spellRow(s, p.spells.includes(s.id)));
+    // rune-forged custom spells
+    if ((p.customSpells || []).length) {
+      body.appendChild(skillsHeader('RUNIC SPELLS — YOUR OWN MAGIC'));
+      for (const s of p.customSpells) body.appendChild(spellRow(s, true));
+    }
+    // cross-class training: even a swordsman can master magic
+    body.appendChild(skillsHeader('OTHER SCHOOLS — TRAINING'));
+    const note = document.createElement('div');
+    note.className = 'muted';
+    note.textContent = 'Any adventurer can train techniques of other schools for gold, once experienced enough. Magic power always scales with INT, weapon arts with STR.';
+    body.appendChild(note);
+    const others = Object.values(D().SPELLS).filter(s => s.cls !== p.cls && s.cls !== 'all' && !s.tome);
+    others.sort((a, b) => a.lvl - b.lvl);
+    for (const s of others) {
       const known = p.spells.includes(s.id);
-      const row = document.createElement('div');
-      row.className = 'spell-row' + (known ? '' : ' locked');
-      const ico = document.createElement('div'); ico.className = 's-ico';
-      const c = document.createElement('canvas'); c.width = 16; c.height = 16;
-      c.getContext('2d').drawImage(PXA.spellIcon(s.icon), 0, 0);
-      ico.appendChild(c); row.appendChild(ico);
-      const mid = document.createElement('div');
-      mid.innerHTML = '<div class="s-name">' + s.name + (known ? '' : (s.tome ? ' — requires tome/manual' : ' — unlocks Lv' + s.lvl)) + '</div><div class="s-desc">' + s.desc + '</div>';
-      row.appendChild(mid);
-      const cost = document.createElement('div'); cost.className = 's-cost';
-      cost.innerHTML = s.mp + ' MP<br>' + s.cd + 's';
-      row.appendChild(cost);
-      if (known) {
-        row.style.cursor = 'pointer';
-        row.title = 'Click to add to hotbar';
-        row.onclick = () => {
-          const free = p.hotbar.findIndex(h => !h);
-          const already = p.hotbar.findIndex(h => h && h.t === 'spell' && h.id === s.id);
-          if (already >= 0) { UI.toast('Already on hotbar (' + (already + 1) + ')', '#8fd4ff'); return; }
-          if (free < 0) { UI.toast('Hotbar full — right-click a slot to clear it.', '#ff9a8a'); return; }
-          p.hotbar[free] = { t: 'spell', id: s.id };
-          UI.refreshHotbar();
-          UI.toast(s.name + ' → hotbar slot ' + (free + 1), '#8fd4ff');
-        };
+      let btn = null;
+      if (!known) {
+        const req = D().trainReq(s), cost = D().trainCost(s);
+        btn = document.createElement('button');
+        btn.className = 'pbtn blue';
+        btn.style.cssText = 'font-size:8px;padding:6px 7px;margin-left:6px;white-space:nowrap;';
+        btn.textContent = 'TRAIN ' + cost + 'g';
+        if (p.level < req) { btn.classList.add('disabled'); btn.textContent = 'LV ' + req; }
+        btn.onclick = ev => { ev.stopPropagation(); GAME.trainSpell(s.id); UI.refreshSkills(); };
       }
-      row.onmouseenter = e => showSpellTip(e, s);
-      row.onmouseleave = hideTooltip;
-      body.appendChild(row);
+      body.appendChild(spellRow(s, known, btn));
     }
   };
 
@@ -621,6 +663,108 @@
         }
       });
     }
+  }
+
+  // ---------------- runeforge ----------------
+  const RF_ELEMENTS = ['fire', 'frost', 'storm', 'void', 'dawn'];
+  const RF_FORMS = [
+    { id: 'arrow', item: 'rune_arrow', label: 'Arrow — piercing bolt' },
+    { id: 'ring', item: 'rune_ring', label: 'Ring — burst around you' },
+    { id: 'tempest', item: 'rune_tempest', label: 'Tempest — storm on the ground' },
+  ];
+  let rfPick = { element: 'fire', form: 'arrow' };
+  UI.openRunecraft = function () {
+    UI.open('win-runes');
+    renderRuneforge();
+  };
+  function renderRuneforge() {
+    const body = $('runes-body');
+    const hasMaster = GAME.countItem('rune_master') > 0;
+    if (!hasMaster) {
+      body.innerHTML = '<div class="muted">Only the <b>Master Rune</b> of the Demon King can bind primal runes into spells.<br><br>Slay Demon King Malzevoth in his Citadel (beyond the Demon Rift, north-east) to claim it. His four Generals guard the element and form runes.</div>';
+      return;
+    }
+    body.innerHTML = '';
+    const info = document.createElement('div');
+    info.className = 'muted';
+    info.innerHTML = 'Bind one <b>element rune</b> + one <b>form rune</b> into a spell of your own design. Its power is written at your current level (Lv ' + P().level + ') — forge again later for stronger magic.';
+    body.appendChild(info);
+    // element picker
+    body.appendChild(skillsHeader('ELEMENT'));
+    const elRow = document.createElement('div');
+    elRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+    for (const el of RF_ELEMENTS) {
+      const n = GAME.countItem('rune_' + el);
+      const b = document.createElement('button');
+      b.className = 'pbtn' + (rfPick.element === el ? ' green' : '');
+      b.style.cssText = 'font-size:9px;padding:7px 8px;' + (n < 1 ? 'opacity:.45;' : '');
+      b.textContent = el.toUpperCase() + ' x' + n;
+      b.onclick = () => { rfPick.element = el; renderRuneforge(); };
+      elRow.appendChild(b);
+    }
+    body.appendChild(elRow);
+    // form picker
+    body.appendChild(skillsHeader('FORM'));
+    for (const f of RF_FORMS) {
+      const n = GAME.countItem(f.item);
+      const b = document.createElement('button');
+      b.className = 'pbtn' + (rfPick.form === f.id ? ' green' : ' blue');
+      b.style.cssText = 'font-size:9px;padding:7px 8px;margin:0 6px 6px 0;' + (n < 1 ? 'opacity:.45;' : '');
+      b.textContent = f.label.toUpperCase() + ' x' + n;
+      b.onclick = () => { rfPick.form = f.id; renderRuneforge(); };
+      body.appendChild(b);
+    }
+    // name + forge
+    body.appendChild(skillsHeader('NAME YOUR SPELL'));
+    const nameIn = document.createElement('input');
+    nameIn.id = 'rf-name';
+    nameIn.maxLength = 22;
+    nameIn.placeholder = 'e.g. Crimson Requiem';
+    nameIn.style.cssText = "font-family:'VT323';font-size:24px;padding:2px 10px;background:#fff7e0;border:3px solid #7a4a22;width:100%;outline:none;color:#3b2a17;";
+    nameIn.addEventListener('keydown', e => e.stopPropagation());
+    body.appendChild(nameIn);
+    const forge = document.createElement('button');
+    forge.className = 'pbtn red';
+    forge.style.cssText = 'margin-top:10px;width:100%;';
+    forge.textContent = '⚒ FORGE SPELL (consumes 2 runes)';
+    forge.onclick = () => {
+      const ok = GAME.craftRuneSpell(rfPick.element, rfPick.form, nameIn.value.trim());
+      if (ok) renderRuneforge();
+    };
+    body.appendChild(forge);
+    const have = document.createElement('div');
+    have.className = 'muted';
+    have.style.marginTop = '8px';
+    have.textContent = 'Forged so far: ' + (P().customSpells || []).map(s => s.name).join(', ') || 'none';
+    body.appendChild(have);
+  }
+
+  // ---------------- leaderboard ----------------
+  UI.openLeaderboard = function () {
+    UI.open('win-leaderboard');
+    buildTabs('lb-tabs', ['Level', 'Bosses', 'Kills', 'PvP'], t => renderLeaderboard(t));
+    renderLeaderboard('Level');
+  };
+  function renderLeaderboard(tab) {
+    const body = $('lb-body');
+    if (!window.NET || !NET.online()) {
+      body.innerHTML = '<div class="muted">The leaderboard requires an online connection.</div>';
+      return;
+    }
+    body.innerHTML = '<div class="muted">Consulting the guild records...</div>';
+    const col = { Level: 'level', Bosses: 'bosses', Kills: 'kills', PvP: 'pvp' }[tab];
+    NET.fetchLeaderboard(col).then(rows => {
+      if (!rows.length) { body.innerHTML = '<div class="muted">No heroes recorded yet. Be the first!</div>'; return; }
+      let html = '';
+      rows.forEach((r, i) => {
+        const me = NET.playerId() === r.id;
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+        html += '<div class="stat-line" style="' + (me ? 'background:rgba(232,179,75,.3);' : '') + '">' +
+          '<span>' + medal + ' ' + esc(r.name) + (me ? ' (you)' : '') + '</span>' +
+          '<b>' + (col === 'level' ? 'Lv ' + r.level : r[col] + (col === 'pvp' ? ' wins' : col === 'bosses' ? ' bosses' : ' kills')) + '</b></div>';
+      });
+      body.innerHTML = html;
+    });
   }
 
   // ---------------- social ----------------
