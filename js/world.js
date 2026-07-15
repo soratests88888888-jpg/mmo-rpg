@@ -279,9 +279,9 @@
     // villagers
     npc(m, 'rw_v1', 'Farmer Tobb', X + 22, Y + 12, { hair: 0, skin: 1, cls: 'swordsman', armorColor: '#8a6236', armorDark: '#5c3a18' }, { wander: 40, chat: ['The slimes ate my cabbages again...', 'Heard the capital pays good coin for adventurers.'] });
     npc(m, 'rw_v2', 'Lily', X + 8, Y + 12, { hair: 3, skin: 0, cls: 'mage', armorColor: '#c8607a', armorDark: '#8a3050' }, { wander: 40, chat: ['Papa says never go north-east. The sky is purple there.', 'Did you see the King Slime? They say it wears a crown!'] });
-    m.spawnPoint = { x: (X + 16) * 16, y: (Y + 12) * 16 };
+    m.spawnPoint = { x: (X + 16) * 16 + 8, y: (Y + 13) * 16 + 8 };
     m.safeZones = m.safeZones || [];
-    m.safeZones.push({ x: X - 3, y: Y - 3, w: 40, h: 30, name: 'Riverwood', spawn: { x: (X + 16) * 16, y: (Y + 12) * 16 } });
+    m.safeZones.push({ x: X - 3, y: Y - 3, w: 40, h: 30, name: 'Riverwood', spawn: { x: (X + 16) * 16 + 8, y: (Y + 13) * 16 + 8 } });
     WORLD.locations.push({ name: 'Riverwood', x: X + 17, y: Y + 12, kind: 'village' });
   }
 
